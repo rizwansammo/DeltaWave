@@ -198,10 +198,16 @@ test("an empty password keeps the stored one; a new one replaces it; remove dele
   const payload = fakePayload();
   await ready(payload);
   const first = payload.state.smtp.passwordEncrypted;
-  const kept = await saveSmtp(payload, { ...valid, password: "", host: "smtp.example.org" }, null, env);
+  const kept = await saveSmtp(payload, { ...valid, password: "", port: 465, security: "tls" }, null, env);
   assert.equal(kept.ok, true);
   assert.equal(payload.state.smtp.passwordEncrypted, first);
-  assert.equal(payload.state.smtp.host, "smtp.example.org");
+  assert.equal(payload.state.smtp.host, valid.host);
+  assert.equal(payload.state.smtp.port, "465");
+
+  const blocked = await saveSmtp(payload, { ...valid, password: "", host: "smtp.example.org" }, null, env);
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.status, 400);
+  assert.equal(payload.state.smtp.host, valid.host, "server must not change without new credentials");
   await saveSmtp(payload, { ...valid, password: "A-New-Password-123" }, null, env);
   assert.notEqual(payload.state.smtp.passwordEncrypted, first);
   const status = await removeSmtp(payload, null, env);
@@ -256,6 +262,25 @@ test("Test connection signs in with the form values (stored password when empty)
   assert.match(bad.message, /username or password/);
   assert.ok(!bad.message.includes("wrong-password-x"));
   assert.equal(payload.state.smtp.lastTest.ok, true, "an unsaved password's test does not overwrite the saved result");
+});
+
+test("changing SMTP host or username never reuses the saved password", async () => {
+  const payload = fakePayload();
+  await ready(payload);
+  const transport = fakeTransport();
+  const deps = { ...transport, lookup: publicLookup, env };
+
+  const hostTest = await testSmtp(payload, { ...valid, host: "different.example.com", password: "" }, deps);
+  assert.equal(hostTest.ok, false);
+  assert.ok(hostTest.errors.password);
+  const userTest = await testSmtp(payload, { ...valid, username: "new@example.com", password: "" }, deps);
+  assert.equal(userTest.ok, false);
+  assert.ok(userTest.errors.password);
+  assert.equal(transport.seen.options.length, 0, "must not attempt a connection with another account's password");
+
+  const usernameSave = await saveSmtp(payload, { ...valid, username: "new@example.com", password: "" }, null, env);
+  assert.equal(usernameSave.status, 400);
+  assert.equal(payload.state.smtp.username, valid.username);
 });
 
 test("Test connection never connects to a blocked host", async () => {
