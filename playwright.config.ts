@@ -1,13 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
-import { testDatabaseUrl } from "./scripts/test-database.mjs";
+import { testEnvironment } from "./scripts/test-database.mjs";
 
 // Browser and HTTP tests run against the production build (`pnpm build`)
 // served by `next start`, connected to the disposable *_test database that
-// `pnpm test:e2e` recreates from migrations first.
+// `pnpm test:e2e` recreates from migrations and seeds first.
 const baseURL = "http://localhost:3000";
 
 export default defineConfig({
   testDir: "tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   outputDir: "test-results",
   snapshotPathTemplate: ".qa/snapshots/{testFileName}/{arg}{ext}",
   fullyParallel: false,
@@ -26,6 +27,6 @@ export default defineConfig({
     url: `${baseURL}/api/enquiry`,
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { DATABASE_URL: testDatabaseUrl(), NODE_ENV: "production" },
+    env: { ...testEnvironment(), NODE_ENV: "production" },
   },
 });

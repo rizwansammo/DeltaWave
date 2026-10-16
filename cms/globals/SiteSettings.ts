@@ -1,6 +1,6 @@
 import type { GlobalConfig } from "payload";
 import { linkGroup, updatedByField, validateHref } from "../fields";
-import { globalAccess, globalHooks, globalVersions } from "../versioned";
+import { globalAccess, globalAdminComponents, globalHooks, globalVersions } from "../versioned";
 
 export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
@@ -8,6 +8,7 @@ export const SiteSettings: GlobalConfig = {
   admin: {
     group: "Website settings",
     description: "Business identity, contact details, search defaults, header and footer.",
+    components: globalAdminComponents,
   },
   access: globalAccess,
   versions: globalVersions,

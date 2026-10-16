@@ -1,6 +1,8 @@
+import { Fragment } from "react";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 import { Brand } from "./brand";
 import { nav, site } from "@/lib/site";
+import { staticPhoto, type PhotoSource } from "@/lib/images";
 
 export function ButtonLink({
   href,
@@ -40,47 +42,38 @@ export function Eyebrow({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
-const images: Record<
-  string,
-  { file: string; alt: string; width: number; height: number }
-> = {
-  architecture: {
-    file: "architecture",
-    alt: "White modern architecture viewed against a pale blue sky",
-    width: 2200,
-    height: 1467,
-  },
-  detail: {
-    file: "detail",
-    alt: "Silver architectural facade with a precise repeating pattern",
-    width: 1800,
-    height: 2267,
-  },
-  workplace: {
-    file: "workplace",
-    alt: "An editorial photograph of people collaborating around laptops",
-    width: 1600,
-    height: 1067,
-  },
-  servers: {
-    file: "servers",
-    alt: "Network cabling and server cabinets illustrating IT infrastructure",
-    width: 1600,
-    height: 898,
-  },
-  education: {
-    file: "education",
-    alt: "A student using a laptop, illustrating digital learning",
-    width: 1500,
-    height: 2250,
-  },
-  logistics: {
-    file: "logistics",
-    alt: "Warehouse shelving illustrating stock and distribution operations",
-    width: 1500,
-    height: 998,
-  },
-};
+/** A responsive photograph from either public/images or the CMS media library. */
+export function ResponsivePhoto({
+  photo,
+  className = "",
+  priority = false,
+}: {
+  photo: PhotoSource;
+  className?: string;
+  priority?: boolean;
+}) {
+  return (
+    <div className={"photo " + className}>
+      <picture>
+        {photo.srcSet && (
+          <source
+            type="image/webp"
+            srcSet={photo.srcSet}
+            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 70vw, 60vw"
+          />
+        )}
+        <img
+          src={photo.src}
+          alt={photo.alt}
+          width={photo.width}
+          height={photo.height}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+        />
+      </picture>
+    </div>
+  );
+}
 export function Photo({
   name,
   className = "",
@@ -90,40 +83,32 @@ export function Photo({
   className?: string;
   priority?: boolean;
 }) {
-  const p = images[name] || images.architecture;
   return (
-    <div className={"photo " + className}>
-      <picture>
-        <source
-          type="image/webp"
-          srcSet={`/images/${p.file}-640.webp 640w, /images/${p.file}-1100.webp 1100w, /images/${p.file}.webp ${p.width}w`}
-          sizes="(max-width: 700px) 100vw, (max-width: 1100px) 70vw, 60vw"
-        />
-        <img
-          src={`/images/${p.file}.jpg`}
-          alt={p.alt}
-          width={p.width}
-          height={p.height}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-        />
-      </picture>
-    </div>
+    <ResponsivePhoto photo={staticPhoto(name)} className={className} priority={priority} />
   );
+}
+/** Text with each entry on its own line, as typed in the CMS. */
+export function Lines({ lines }: { lines: string[] }) {
+  return lines.map((line, i) => (
+    <Fragment key={i}>
+      {i > 0 && <br />}
+      {line}
+    </Fragment>
+  ));
 }
 export function SectionHead({
   label,
   title,
   children,
 }: {
-  label: string;
-  title: string;
+  label?: string;
+  title: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
     <div className="section-head">
       <div>
-        <Eyebrow>{label}</Eyebrow>
+        {label && <Eyebrow>{label}</Eyebrow>}
         <h2>{title}</h2>
       </div>
       {children && <div className="section-head-side">{children}</div>}

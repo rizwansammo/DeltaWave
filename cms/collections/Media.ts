@@ -29,7 +29,8 @@ export const Media: CollectionConfig = {
   },
   upload: {
     // Local disk in development. Production storage moves to Cloudflare R2.
-    staticDir: "media",
+    // MEDIA_DIR keeps the end-to-end suite's uploads apart from development's.
+    staticDir: process.env.MEDIA_DIR || "media",
     mimeTypes: allowedImageTypes,
     pasteURL: false,
     focalPoint: true,
@@ -38,7 +39,9 @@ export const Media: CollectionConfig = {
       { name: "thumbnail", width: 400, height: 300, position: "centre" },
       { name: "small", width: 640, formatOptions: { format: "webp" } },
       { name: "medium", width: 1100, formatOptions: { format: "webp" } },
-      { name: "large", width: 1800, formatOptions: { format: "webp" } },
+      // Never enlarged: a photo narrower than 1800 px gets a full-size WebP
+      // here, so high-density screens still receive the whole image.
+      { name: "large", width: 1800, withoutEnlargement: true, formatOptions: { format: "webp" } },
     ],
   },
   fields: [

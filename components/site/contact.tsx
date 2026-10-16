@@ -29,8 +29,19 @@ function requestedService() {
 }
 export function ContactSection({
   standalone = false,
+  eyebrow = "Let’s start with your idea",
+  heading = (
+    <>
+      A better way forward
+      <br />
+      starts with a conversation.
+    </>
+  ),
 }: {
   standalone?: boolean;
+  /** Empty hides the eyebrow. */
+  eyebrow?: string;
+  heading?: React.ReactNode;
 }) {
   const [state, setState] = useState<"idle" | "sending" | "success" | "error">(
       "idle",
@@ -233,12 +244,8 @@ export function ContactSection({
     >
       <div className="container">
         <div className="contact-heading">
-          <Eyebrow>Let’s start with your idea</Eyebrow>
-          <h2>
-            A better way forward
-            <br />
-            starts with a conversation.
-          </h2>
+          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+          <h2>{heading}</h2>
         </div>
         <div className="contact-columns">
           <div className="contact-details">

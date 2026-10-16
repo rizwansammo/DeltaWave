@@ -8,10 +8,13 @@ import {
   type Solution,
 } from "@/lib/content";
 import { serviceOptions, site } from "@/lib/site";
+import type { HomepageView, LinkView } from "@/lib/cms/homepage-view";
 import {
   ButtonLink,
   TextLink,
   Photo,
+  ResponsivePhoto,
+  Lines,
   Eyebrow,
   SectionHead,
   PageHero,
@@ -20,240 +23,257 @@ import {
 } from "./shared";
 import { ContactSection } from "./contact";
 import { SolutionsDirectory, ProjectList } from "./directories";
+import { ProjectEntry } from "./project-entry";
 
-export function HomePage() {
+const sideContent = (lines: string[], link: LinkView | null) =>
+  lines.length > 0 || link ? (
+    <>
+      {lines.length > 0 && (
+        <p>
+          <Lines lines={lines} />
+        </p>
+      )}
+      {link && <TextLink href={link.href}>{link.label}</TextLink>}
+    </>
+  ) : undefined;
+
+/**
+ * The homepage composition. Section order, markup and classes are fixed by the
+ * design; the content comes from the Homepage global (lib/cms/homepage.ts).
+ */
+export function HomePage({ content }: { content: HomepageView }) {
+  const {
+    hero,
+    introduction: intro,
+    services,
+    industries,
+    engineering,
+    portfolio,
+    approach,
+    academy,
+    contact,
+  } = content;
   return (
     <>
       <section className="home-hero container">
         <div className="hero-copy">
-          <Eyebrow>Software. Systems. Possibility.</Eyebrow>
+          {hero.eyebrow && <Eyebrow>{hero.eyebrow}</Eyebrow>}
           <h1>
-            Technology that
-            <br />
-            moves business
-            <br />
-            <span>forward.</span>
+            <Lines lines={hero.headingLines} />
+            {hero.headingAccent && (
+              <>
+                {hero.headingLines.length > 0 && <br />}
+                <span>{hero.headingAccent}</span>
+              </>
+            )}
           </h1>
-          <p>
-            We bring software engineering, business technology and thoughtful
-            design together to help you build what comes next.
-          </p>
-          <div className="hero-actions">
-            <ButtonLink href="/contact">Build with us</ButtonLink>
-            <TextLink href="/services">Explore our services</TextLink>
-          </div>
-          <a className="hero-scroll" href="#introduction">
-            <ArrowDown size={15} />
-            <span>A considered approach to technology</span>
-          </a>
+          {hero.description && <p>{hero.description}</p>}
+          {(hero.primaryLink || hero.secondaryLink) && (
+            <div className="hero-actions">
+              {hero.primaryLink && (
+                <ButtonLink href={hero.primaryLink.href}>{hero.primaryLink.label}</ButtonLink>
+              )}
+              {hero.secondaryLink && (
+                <TextLink href={hero.secondaryLink.href}>{hero.secondaryLink.label}</TextLink>
+              )}
+            </div>
+          )}
+          {intro.enabled && hero.scrollLabel && (
+            <a className="hero-scroll" href="#introduction">
+              <ArrowDown size={15} />
+              <span>{hero.scrollLabel}</span>
+            </a>
+          )}
         </div>
-        <div className="hero-visual">
-          <Photo name="architecture" priority />
-          <div className="hero-caption">
-            <span>Engineering digital progress.</span>
-            <ArrowUpRight size={22} />
+        {(hero.image || hero.imageCaption) && (
+          <div className="hero-visual">
+            {hero.image && <ResponsivePhoto photo={hero.image} priority />}
+            {hero.imageCaption && (
+              <div className="hero-caption">
+                <span>{hero.imageCaption}</span>
+                <ArrowUpRight size={22} />
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </section>
-      <section id="introduction" className="intro-section container">
-        <div>
-          <Eyebrow>Meet DeltaWave</Eyebrow>
-          <span className="intro-location">
-            Based in Bangladesh.
-            <br />
-            Built with a wider perspective.
-          </span>
-        </div>
-        <div>
-          <h2>
-            Good technology starts
-            <br />
-            with understanding
-            <br />
-            <span className="muted">your business.</span>
-          </h2>
-          <div className="intro-bottom">
-            <p>
-              DeltaWave Technology is a developing technology enterprise focused
-              on useful, maintainable software and dependable IT. We start with
-              the way your organization works, then shape the right solution
-              around it.
-            </p>
-            <TextLink href="/about">Get to know us</TextLink>
+      {intro.enabled && (
+        <section id="introduction" className="intro-section container">
+          <div>
+            {intro.eyebrow && <Eyebrow>{intro.eyebrow}</Eyebrow>}
+            {intro.locationLines.length > 0 && (
+              <span className="intro-location">
+                <Lines lines={intro.locationLines} />
+              </span>
+            )}
           </div>
-        </div>
-      </section>
-      <section className="services-section">
-        <div className="container">
-          <SectionHead
-            label="What we do"
-            title="From the first idea to the everyday operation."
-          >
-            <p>
-              Four connected capabilities.
-              <br />
-              One practical approach.
-            </p>
-            <TextLink href="/services">All services</TextLink>
-          </SectionHead>
-          <div className="service-editorial">
-            <div className="service-feature">
-              <Photo name="workplace" />
-              <div className="feature-caption">
-                <span>Ideas become useful when people can work with them.</span>
-                <span>01</span>
+          <div>
+            <h2>
+              <Lines lines={intro.headingLines} />
+              {intro.headingMuted && (
+                <>
+                  {intro.headingLines.length > 0 && <br />}
+                  <span className="muted">{intro.headingMuted}</span>
+                </>
+              )}
+            </h2>
+            {(intro.body || intro.link) && (
+              <div className="intro-bottom">
+                {intro.body && <p>{intro.body}</p>}
+                {intro.link && <TextLink href={intro.link.href}>{intro.link.label}</TextLink>}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+      {services.enabled && (
+        <section className="services-section">
+          <div className="container">
+            <SectionHead
+              label={services.eyebrow}
+              title={<Lines lines={services.headingLines} />}
+            >
+              {sideContent(services.sideTextLines, services.link)}
+            </SectionHead>
+            <div className="service-editorial">
+              {(services.featureImage || services.featureCaption) && (
+                <div className="service-feature">
+                  {services.featureImage && <ResponsivePhoto photo={services.featureImage} />}
+                  {services.featureCaption && (
+                    <div className="feature-caption">
+                      <span>{services.featureCaption}</span>
+                      <span>01</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="service-summary">
+                {services.categories.map((c) => (
+                  <a href={"/services/" + c.slug} key={c.slug}>
+                    <span className="service-number">{c.number}</span>
+                    <div>
+                      <h3>{c.title}</h3>
+                      <p>{c.description}</p>
+                    </div>
+                    <ArrowUpRight size={22} />
+                  </a>
+                ))}
               </div>
             </div>
-            <div className="service-summary">
-              {categories.map((c) => (
-                <a href={"/services/" + c.slug} key={c.slug}>
-                  <span className="service-number">{c.number}</span>
-                  <div>
-                    <h3>{c.title}</h3>
-                    <p>{c.description}</p>
-                  </div>
-                  <ArrowUpRight size={22} />
-                </a>
-              ))}
-            </div>
           </div>
-        </div>
-      </section>
-      <section className="industry-section container">
-        <SectionHead
-          label="Solutions we can build"
-          title="Built for the way your industry works."
-        >
-          <p>
-            Specific challenges deserve specific solutions. Explore applications
-            shaped around your operations.
-          </p>
-          <TextLink href="/solutions">Explore all industries</TextLink>
-        </SectionHead>
-        <div className="industry-preview">
-          {[
-            "ecommerce-facebook",
-            "education-coaching",
-            "retail-pos-restaurant",
-            "healthcare-diagnostics",
-            "logistics-delivery",
-            "business-process-automation",
-          ].map((slug, i) => {
-            const s = solutions.find((x) => x.slug === slug)!;
-            return (
-              <a href={"/solutions/" + s.slug} key={slug}>
+        </section>
+      )}
+      {industries.enabled && (
+        <section className="industry-section container">
+          <SectionHead
+            label={industries.eyebrow}
+            title={<Lines lines={industries.headingLines} />}
+          >
+            {sideContent(industries.sideTextLines, industries.link)}
+          </SectionHead>
+          <div className="industry-preview">
+            {industries.items.map((s, i) => (
+              <a href={"/solutions/" + s.slug} key={s.slug}>
                 <span className="small-label">
                   0{i + 1} / {s.label}
                 </span>
                 <h3>{s.title}</h3>
-                <p>{s.modules.slice(0, 3).join(". ")}.</p>
+                {s.summary && <p>{s.summary}.</p>}
                 <ArrowUpRight size={21} />
               </a>
-            );
-          })}
-        </div>
-      </section>
-      <section className="engineering-section">
-        <div className="container engineering-inner">
-          <div>
-            <Eyebrow>The foundation matters</Eyebrow>
-            <h2>
-              Built to work.
-              <br />
-              Designed to last.
-            </h2>
-            <p>
-              Architecture, access, deployment and recovery deserve the same
-              attention as the interface. We consider how a system will be
-              operated long after its first release.
-            </p>
-            <TextLink href="/services/cloud-managed-it">
-              Explore our technical approach
-            </TextLink>
+            ))}
           </div>
-          <div className="engineering-detail">
-            <Photo name="servers" />
-            <div className="capability-lines">
-              <span>Software & SaaS architecture</span>
-              <span>Cloud infrastructure & DevOps</span>
-              <span>Systems integration & automation</span>
+        </section>
+      )}
+      {engineering.enabled && (
+        <section className="engineering-section">
+          <div className="container engineering-inner">
+            <div>
+              {engineering.eyebrow && <Eyebrow>{engineering.eyebrow}</Eyebrow>}
+              <h2>
+                <Lines lines={engineering.headingLines} />
+              </h2>
+              {engineering.body && <p>{engineering.body}</p>}
+              {engineering.link && (
+                <TextLink href={engineering.link.href}>{engineering.link.label}</TextLink>
+              )}
             </div>
-          </div>
-        </div>
-      </section>
-      <section className="portfolio-section container">
-        <SectionHead
-          label="Product directions"
-          title="Ideas with a practical purpose."
-        >
-          <p>
-            A look at the products we are exploring.
-            <br />
-            These concepts are not commercially available.
-          </p>
-          <TextLink href="/portfolio">View our portfolio</TextLink>
-        </SectionHead>
-        <ProjectList compact />
-      </section>
-      <section className="approach-section container">
-        <div>
-          <Eyebrow>How we think</Eyebrow>
-          <h2>Clarity at every step.</h2>
-          <p>
-            Good delivery is a series of informed decisions. We keep the work
-            understandable, reviewable and connected to your goals.
-          </p>
-        </div>
-        <ol className="approach-list">
-          {[
-            [
-              "Understand the work",
-              "Map the business process, listen to the people involved and identify what needs to change.",
-            ],
-            [
-              "Define what matters",
-              "Agree a realistic scope, the right architecture and a useful first release.",
-            ],
-            [
-              "Build, review, refine",
-              "Work in visible stages with clear acceptance criteria and room for informed feedback.",
-            ],
-            [
-              "Prepare for everyday use",
-              "Plan the handover, documentation, maintenance and support the system will need.",
-            ],
-          ].map(([h, p], i) => (
-            <li key={h}>
-              <span>0{i + 1}</span>
-              <div>
-                <h3>{h}</h3>
-                <p>{p}</p>
+            {(engineering.image || engineering.capabilities.length > 0) && (
+              <div className="engineering-detail">
+                {engineering.image && <ResponsivePhoto photo={engineering.image} />}
+                {engineering.capabilities.length > 0 && (
+                  <div className="capability-lines">
+                    {engineering.capabilities.map((capability, i) => (
+                      <span key={i}>{capability}</span>
+                    ))}
+                  </div>
+                )}
               </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-      <section className="academy-band container">
-        <Photo name="education" />
-        <div>
-          <Eyebrow>DeltaWave Academy</Eyebrow>
-          <h2>
-            Practical skills.
-            <br />
-            New possibilities.
-          </h2>
-          <p>
-            A planned initiative in computer training and digital skills.
-            Designed to connect learning with the tools people use in work and
-            business.
-          </p>
-          <span className="status-label">
-            In planning · Enrollment is not open
-          </span>
-          <TextLink href="/academy">Discover the Academy</TextLink>
-        </div>
-      </section>
-      <ContactSection />
+            )}
+          </div>
+        </section>
+      )}
+      {portfolio.enabled && (
+        <section className="portfolio-section container">
+          <SectionHead
+            label={portfolio.eyebrow}
+            title={<Lines lines={portfolio.headingLines} />}
+          >
+            {sideContent(portfolio.sideTextLines, portfolio.link)}
+          </SectionHead>
+          {portfolio.projects.length > 0 && (
+            <div className="project-list">
+              {portfolio.projects.map((p, i) => (
+                <ProjectEntry key={p.slug} project={p} index={i} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+      {approach.enabled && (
+        <section className="approach-section container">
+          <div>
+            {approach.eyebrow && <Eyebrow>{approach.eyebrow}</Eyebrow>}
+            <h2>
+              <Lines lines={approach.headingLines} />
+            </h2>
+            {approach.body && <p>{approach.body}</p>}
+          </div>
+          {approach.steps.length > 0 && (
+            <ol className="approach-list">
+              {approach.steps.map((step, i) => (
+                <li key={i}>
+                  <span>0{i + 1}</span>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      )}
+      {academy.enabled && (
+        <section className="academy-band container">
+          {academy.image && <ResponsivePhoto photo={academy.image} />}
+          <div>
+            {academy.eyebrow && <Eyebrow>{academy.eyebrow}</Eyebrow>}
+            <h2>
+              <Lines lines={academy.headingLines} />
+            </h2>
+            {academy.body && <p>{academy.body}</p>}
+            {academy.statusLabel && <span className="status-label">{academy.statusLabel}</span>}
+            {academy.link && <TextLink href={academy.link.href}>{academy.link.label}</TextLink>}
+          </div>
+        </section>
+      )}
+      {contact.enabled && (
+        <ContactSection
+          eyebrow={contact.eyebrow}
+          heading={<Lines lines={contact.headingLines} />}
+        />
+      )}
     </>
   );
 }

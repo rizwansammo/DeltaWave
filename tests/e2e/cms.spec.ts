@@ -1,34 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, request as playwrightRequest, test, type APIRequestContext } from "@playwright/test";
+import { admin, apiSession, publishedHomepage, publishHomepage, signIn } from "./cms-helpers";
 import { horizontalOverflow, measureBrand, roundedElements, settle } from "./helpers";
 
-// Runs in order against the disposable *_test database, which starts empty.
+// Runs in order against the disposable *_test database, which starts with the
+// seeded homepage content and no accounts.
 test.describe.configure({ mode: "serial" });
 
 const password = () => `E2e-${randomUUID()}`;
-const admin = { email: "e2e-admin@deltawave.test", password: password() };
 const editor = { email: "e2e-editor@deltawave.test", password: password() };
-
-async function signIn(page: Page, user: { email: string; password: string }) {
-  await page.goto("/admin/login");
-  await page.fill("#field-email", user.email);
-  await page.fill("#field-password", user.password);
-  await page.click("button[type=submit]");
-  await page.waitForURL(/\/admin$/);
-}
-
-async function apiSession(baseURL: string, user?: { email: string; password: string }) {
-  const context = await playwrightRequest.newContext({
-    baseURL,
-    extraHTTPHeaders: { origin: baseURL },
-  });
-  if (user) {
-    const login = await context.post("/cms-api/users/login", { data: user });
-    expect(login.status(), `login ${user.email}`).toBe(200);
-  }
-  return context;
-}
 
 test.describe("CMS admin interface", () => {
   test("the first visit leads to a branded account set-up", async ({ page }) => {
@@ -143,7 +124,9 @@ test.describe("CMS API security", () => {
 
   test("session cookies are HttpOnly and SameSite=Lax", async ({ baseURL }) => {
     const context = await playwrightRequest.newContext({ baseURL });
-    const login = await context.post("/cms-api/users/login", { data: admin });
+    const login = await context.post("/cms-api/users/login", {
+      data: { email: admin.email, password: admin.password },
+    });
     const cookie = login.headersArray().find((h) => h.name.toLowerCase() === "set-cookie")?.value ?? "";
     expect(cookie).toMatch(/payload-token=/);
     expect(cookie).toMatch(/HttpOnly/i);
@@ -250,6 +233,16 @@ test.describe("CMS API security", () => {
   });
 
   test("homepage drafts stay private until an administrator publishes", async () => {
+    // Later specs expect the seeded homepage, so it is restored either way.
+    const seeded = await publishedHomepage(adminApi);
+    try {
+      await homepageDraftsStayPrivate();
+    } finally {
+      await publishHomepage(adminApi, seeded);
+    }
+  });
+
+  async function homepageDraftsStayPrivate() {
     const shown = { enabled: false };
     const live = {
       hero: {
@@ -284,7 +277,7 @@ test.describe("CMS API security", () => {
     expect(asDraft.hero?.description).not.toBe("Draft only description.");
     const adminView = await (await adminApi.get("/cms-api/globals/homepage?draft=true")).json();
     expect(adminView.hero.description).toBe("Draft only description.");
-  });
+  }
 
   test("uploads accept alt-texted raster images only, within the size limit", async ({ baseURL }) => {
     const png = await readFile("public/brand/deltawave_corporate_blue_64px.png");

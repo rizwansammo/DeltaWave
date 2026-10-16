@@ -3,6 +3,9 @@
 // a misconfigured environment can never point tests at a shared database.
 import { existsSync } from "node:fs";
 
+/** Uploads made against the test database, kept apart from media/. */
+export const testMediaDir = ".qa/test-media";
+
 export function testDatabaseUrl() {
   if (existsSync(".env")) process.loadEnvFile(".env");
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set.");
@@ -13,3 +16,6 @@ export function testDatabaseUrl() {
   url.pathname = `/${name.endsWith("_test") ? name : `${name}_test`}`;
   return url.href;
 }
+
+/** Environment for anything that talks to the test database. */
+export const testEnvironment = () => ({ DATABASE_URL: testDatabaseUrl(), MEDIA_DIR: testMediaDir });

@@ -2,7 +2,8 @@
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Search } from "lucide-react";
 import { solutions, projects } from "@/lib/content";
-import { Photo, TextLink } from "./shared";
+import { staticPhoto } from "@/lib/images";
+import { ProjectEntry } from "./project-entry";
 
 export function SolutionsDirectory() {
   const [query, setQuery] = useState(""),
@@ -122,31 +123,19 @@ export function ProjectList({ compact = false }: { compact?: boolean }) {
       )}
       <div className="project-list">
         {list.map((p, i) => (
-          <article className={"project-entry project-" + i} key={p.slug}>
-            <a
-              className="project-image"
-              href={"/portfolio/" + p.slug}
-              tabIndex={-1}
-              aria-hidden="true"
-            >
-              <Photo name={p.image} />
-              <span>{p.status}</span>
-            </a>
-            <div className="project-meta">
-              <span className="small-label">{p.name}</span>
-              <span>0{i + 1}</span>
-            </div>
-            <h3>
-              <a href={"/portfolio/" + p.slug}>
-                {p.title}
-                <ArrowUpRight size={23} />
-              </a>
-            </h3>
-            <p>{p.intro}</p>
-            <TextLink href={"/portfolio/" + p.slug}>
-              Explore the concept
-            </TextLink>
-          </article>
+          <ProjectEntry
+            key={p.slug}
+            index={i}
+            project={{
+              slug: p.slug,
+              name: p.name,
+              title: p.title,
+              status: p.status,
+              intro: p.intro,
+              photo: staticPhoto(p.image),
+              linkLabel: "Explore the concept",
+            }}
+          />
         ))}
       </div>
       {!list.length && (

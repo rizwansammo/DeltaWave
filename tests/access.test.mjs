@@ -7,7 +7,7 @@ import {
   publishedOrStaff,
 } from "../cms/access.ts";
 import { Users } from "../cms/collections/Users.ts";
-import { contentHooks, globalHooks } from "../cms/versioned.ts";
+import { contentHooks, globalAccess, globalHooks } from "../cms/versioned.ts";
 import { Media, allowedImageTypes } from "../cms/collections/Media.ts";
 import { validateHref } from "../cms/fields.ts";
 
@@ -23,15 +23,37 @@ test("visitors only read published content", () => {
   assert.equal(publishedOrStaff({ req: req(admin) }), true);
 });
 
-test("only administrators publish; editors save drafts", () => {
+test("only administrators publish; editors may edit toward drafts", () => {
   const publish = { _status: "published" };
   const draft = { _status: "draft" };
   assert.equal(draftWriteAccess({ req: req(admin), data: publish }), true);
-  assert.equal(draftWriteAccess({ req: req(editor, { draft: "true" }), data: draft }), true);
-  assert.equal(draftWriteAccess({ req: req(editor, { draft: "true" }), data: publish }), false);
-  // A non-draft write would replace the live document, so editors cannot make one.
-  assert.equal(draftWriteAccess({ req: req(editor), data: draft }), false);
-  assert.equal(draftWriteAccess({ req: req(null, { draft: "true" }), data: draft }), false);
+  assert.equal(draftWriteAccess({ req: req(editor), data: draft }), true, "the admin's edit check");
+  assert.equal(draftWriteAccess({ req: req(editor), data: publish }), false, "no Publish for editors");
+  assert.equal(draftWriteAccess({ req: req(null), data: draft }), false);
+  // Globals are checked with the stored document, so editing is not tied to its status.
+  assert.equal(globalAccess.update({ req: req(editor) }), true);
+  assert.equal(globalAccess.update({ req: req(null) }), false);
+});
+
+test("every write by an editor is a draft save, including version restores", () => {
+  const t = (key) => key;
+  for (const guard of [contentHooks.beforeOperation[0], globalHooks.beforeOperation[0]]) {
+    const run = (user, operation, args) => guard({ args, operation, req: { user, t } });
+    const refused = (user, operation, args) =>
+      assert.throws(() => run(user, operation, args), (error) => error.status === 403, `${operation} ${JSON.stringify(args)}`);
+    // A non-draft write would replace the live document, so editors cannot make one.
+    refused(editor, "update", { draft: false, data: { title: "Live edit" } });
+    refused(editor, "update", { data: { _status: "draft" } });
+    refused(editor, "create", { draft: false, data: {} });
+    refused(editor, "update", { draft: true, data: { _status: "published" } });
+    refused(editor, "restoreVersion", { id: 3, draft: false });
+    const draftSave = { draft: true, data: { title: "Draft" } };
+    assert.equal(run(editor, "update", draftSave), draftSave);
+    assert.ok(run(editor, "restoreVersion", { id: 3, draft: true }));
+    assert.ok(run(editor, "read", {}), "reads are not writes");
+    assert.ok(run(admin, "update", { draft: false, data: { _status: "published" } }));
+    assert.ok(run(undefined, "update", { draft: false, data: {} }), "trusted server code without a user");
+  }
 });
 
 test("no write by a non-administrator can end up published", () => {

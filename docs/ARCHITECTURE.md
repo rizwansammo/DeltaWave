@@ -6,7 +6,8 @@ DeltaWave Technology runs as **one Next.js application** that serves the public 
 
 | Path | Owner | Notes |
 | --- | --- | --- |
-| `/` and the 42 content pages | `app/(frontend)` | Prerendered at build time from `lib/content.ts` (Phase 1). |
+| `/` | `app/(frontend)/page.tsx` | Rendered on every request from the published Homepage global (Phase 2A). See "Homepage content" below. |
+| The 42 content pages | `app/(frontend)/[...slug]` | Prerendered at build time from `lib/content.ts` until their Phase 2 migration. |
 | Unknown paths | `app/(frontend)/[...slug]` → `not-found.tsx` | Real HTTP 404 with the branded page in production builds. |
 | `/admin`, `/admin/*` | `app/(payload)/admin/[[...segments]]` | Payload admin panel. Sends `X-Robots-Tag: noindex, nofollow`. |
 | `/cms-api/*` | `app/(payload)/cms-api/[...slug]/route.ts` | Payload REST API (`config.routes.api`). Sends `X-Robots-Tag`. |
@@ -51,12 +52,30 @@ ESLint 9 is end of life, so ESLint 10 is used. Three plugins bundled by `eslint-
 - **Local:** `docker-compose.yml` runs a dedicated container `deltawave-postgres` (image `postgres:18.6-alpine3.24`) with the named volume `deltawave-pgdata`, bound to `127.0.0.1:54330` only. It does not restart on its own. Credentials come from the untracked `.env`, created by `pnpm setup:env`.
 - **Development schema:** `pnpm dev` uses Payload's push mode, which syncs the schema automatically. Do not run `pnpm migrate` against the development database.
 - **Every other environment:** migrations in `migrations/`, created with `pnpm migrate:create <name>` and applied with `pnpm migrate` before the new build goes live. The initial migration creates all 46 tables and has been applied to a fresh database in tests.
-- **Test database:** `pnpm test:e2e` recreates `<db>_test` from the migrations every run (`scripts/prepare-test-db.mjs`). It refuses non-local hosts and only targets names ending in `_test`.
+- **Test database:** `pnpm test:e2e` recreates `<db>_test` from the migrations every run, then runs the homepage seed against it (`scripts/prepare-test-db.mjs`). It refuses non-local hosts and only targets names ending in `_test`. Uploads made in tests go to `.qa/test-media` (`MEDIA_DIR`), which is emptied with the database, so tests never write to `media/`.
+- **Content seed:** `pnpm seed:homepage` (`scripts/seed-homepage.ts`, run through `payload run`) loads the approved homepage, its photographs and the records it features. It changes nothing once the Homepage global has been saved. In production run it once after `pnpm migrate`, with `NODE_ENV=production`.
 - Drizzle is used only inside Payload's adapter. The prototype's own Drizzle/D1 setup was empty and has not been carried over, so Payload is the only owner of the schema.
+
+## Homepage content
+
+`app/(frontend)/page.tsx` is dynamic (`force-dynamic`): every request reads the Homepage global, so a publish in `/admin` appears on the next page load, with no rebuild, cache tag or extra infrastructure. The other pages stay static until they move to the CMS.
+
+1. `lib/cms/homepage.ts` connects with `getPayload` and calls `readHomepage` (`lib/cms/homepage-state.ts`).
+2. `readHomepage` reads the global and the service categories through the Local API with `overrideAccess: false` and `draft: false`, exactly as an anonymous visitor would. Drafts, and related records the visitor may not read (unpublished or deleted), never reach the page; Payload returns them as bare IDs and the mapper leaves them out.
+3. `toHomepageView` (`lib/cms/homepage-view.ts`) turns the document into the plain view the unchanged `HomePage` component renders. A field published empty renders nothing; there are no per-field defaults.
+
+| State | When | Visitors see | Logged |
+| --- | --- | --- | --- |
+| `published` | A published version exists (newer drafts are ignored) | The published content | No |
+| `draft` | Drafts were saved but nothing was ever published | The approved content | Warning |
+| `uninitialized` | The global was never saved (seed not run) | The approved content | Warning |
+| `unavailable` | The database cannot be reached | The approved content | Error |
+
+Any other error (access, validation, programming) is thrown rather than hidden behind the fallback. The approved content (`lib/cms/homepage-approved.ts`) is the prototype's copy verbatim; it is also what the seed publishes. A published homepage cannot be unpublished (a `beforeChange` hook refuses it through the admin and REST API), so once published the site never falls back to it except during a database outage.
 
 ## Media storage
 
-Phase 1 stores uploads on local disk in `media/` (gitignored), served through `/cms-api/media/file/*` with the collection's access rules. Production storage moves to **Cloudflare R2** through `@payloadcms/storage-s3` (R2 is S3-compatible); the variables are reserved in `.env.example`. Local disk is not suitable for multi-instance or ephemeral hosting.
+Uploads are stored on local disk in `media/` (gitignored; `MEDIA_DIR` overrides the directory, which the e2e suite uses), served through `/cms-api/media/file/*` with the collection's access rules. Production storage moves to **Cloudflare R2** through `@payloadcms/storage-s3` (R2 is S3-compatible); the variables are reserved in `.env.example`. Local disk is not suitable for multi-instance or ephemeral hosting.
 
 ## Security configuration
 
@@ -67,7 +86,7 @@ Phase 1 stores uploads on local disk in `media/` (gitignored), served through `/
 | CSRF | `csrf: [serverURL]`. Cookie authentication from any other `Origin` is ignored (verified in tests). |
 | CORS | `cors: [serverURL]` only. |
 | Roles | `admin` (publish, delete, accounts) and `editor` (drafts only). See `docs/CMS_CONTENT_MODEL.md`. |
-| Publishing | Access control plus a `beforeChange` invariant: no write by a non-administrator can produce a published version. |
+| Publishing | Access control decides who may edit. A `beforeOperation` guard requires every editor write, including version restores, to be a draft save. A `beforeChange` invariant ensures no write by a non-administrator can produce a published version. The homepage cannot be unpublished. |
 | Drafts | Visitors only receive published documents. Asking for `?draft=true` never reveals a draft (verified in tests). |
 | Uploads | JPEG, PNG, WebP and AVIF only (no SVG); 10 MB per file; alt text required; remote URL fetching (`pasteURL`) off; staff-only create, admin-only delete. |
 | Indexing | Admin metadata `noindex, nofollow`, `X-Robots-Tag` on `/admin` and `/cms-api`, robots.txt rules. |

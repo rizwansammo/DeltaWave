@@ -12,8 +12,9 @@ export function DashboardIntro() {
         site settings. Editors save drafts. Administrators review and publish.
       </p>
       <p className="dw-dashboard-note">
-        The public website still reads its content from the codebase. Connecting
-        these collections to the live pages is the next development phase.
+        The homepage is live from the CMS: once the Homepage is published, visitors
+        see the change on their next page load. The other pages still read their
+        content from the codebase and move over in the next development steps.
       </p>
     </section>
   );

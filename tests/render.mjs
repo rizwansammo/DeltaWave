@@ -2,6 +2,7 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import { HomePage } from "../components/site/pages.tsx";
+import { approvedHomepageView } from "../lib/cms/homepage-view.ts";
 import { Navigation } from "../components/site/navigation.tsx";
 import { Footer } from "../components/site/shared.tsx";
 import Page, { generateMetadata } from "../app/(frontend)/[...slug]/page.tsx";
@@ -13,7 +14,7 @@ for (const route of allPaths) {
   const slug = route.slice(1).split("/");
   const node =
     route === "/"
-      ? h(HomePage)
+      ? h(HomePage, { content: approvedHomepageView() })
       : await Page({ params: Promise.resolve({ slug }) });
   const page = renderToStaticMarkup(
     h(
