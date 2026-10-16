@@ -59,3 +59,41 @@ is for public CMS content integration only.
 Validation note: changes were authored through GitHub, not against the user's
 running Windows development server. Local build/browser confirmation after pull
 is still required; do not mark those checks as executed until run.
+
+## Follow-up: flush-top branding and border-mounted collapse control
+
+The empty space above the lockup was Payload's built-in nav padding reserved
+for the desktop NavToggler. The fix reduces that padding to 18 px and positions
+the **same native collapse control** across the right edge of the sidebar.
+Its arrow SVG, Payload state, keyboard activation and open/closed preference
+are not reimplemented. In the closed state it stays inside the left edge of
+the content area, so the control can reopen the sidebar. At 768 px and below,
+the desktop control is hidden and Payload's existing mobile header toggle
+remains responsible for showing and dismissing the nav.
+
+Scoped CSS in `app/(payload)/custom.scss` only. This change does not modify
+the lockup's source assets, Wordmark geometry, content layout or database.
+
+## Follow-up: white browser tab favicons
+
+The owner requested white, high-contrast favicons for **both** the public site
+and the Payload CMS because navy disappeared against dark browser chrome.
+
+- Added exact alpha-mask-preserving white variants of the owner's approved
+  16, 32 and 48 px *optical* favicon artwork in `public/brand/`.
+- The original blue optical variants are unchanged and remain available.
+- `public/favicon.png` is the white 32 px variant. Both the frontend metadata
+  and CMS `admin.meta.icons` point to the white favicons.
+- The 256 px Apple Touch Icon remains blue intentionally: it is a separate
+  launcher icon designed for a light background, not a dark browser tab.
+- `tests/brand.test.mjs` checks that every white favicon has exactly the
+  original alpha silhouette and opaque artwork is white.
+- The 32 px URL has a version suffix to invalidate the old blue favicon cache.
+
+### After pulling
+
+Open a fresh browser tab on both `/` and `/admin` to see the white icon
+against dark browser UI. Use a forced refresh / private window if a cached
+fav icon remains navy. On desktop collapse the nav and reopen it, then check
+the 390 px mobile menu. The GitHub edit itself did not execute the owner's
+browser tests; run the focused checks locally.

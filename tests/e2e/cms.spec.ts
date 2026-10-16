@@ -60,6 +60,21 @@ test.describe("CMS admin interface", () => {
     expect(
       await page.locator("aside.nav").evaluate((element) => getComputedStyle(element).backgroundColor),
     ).toBe("rgb(19, 43, 70)");
+    // The native desktop toggle lives on the sidebar/content border, while
+    // the full-size brand lockup starts near the top without a blank header.
+    const sidebar = await page.locator("aside.nav").boundingBox();
+    const navToggle = page.locator(".template-default__nav-toggler-wrapper .template-default__nav-toggler");
+    const toggle = await navToggle.boundingBox();
+    const brandBounds = await page.locator(".dw-nav-brand").boundingBox();
+    expect(sidebar).not.toBeNull();
+    expect(toggle).not.toBeNull();
+    expect(brandBounds).not.toBeNull();
+    expect(Math.abs(toggle!.x + toggle!.width / 2 - (sidebar!.x + sidebar!.width))).toBeLessThanOrEqual(3);
+    expect(brandBounds!.y - sidebar!.y).toBeLessThan(36);
+    await navToggle.click();
+    await expect(navToggle).toHaveAttribute("aria-label", /open menu/i);
+    await navToggle.click();
+    await expect(navToggle).toHaveAttribute("aria-label", /close menu/i);
     await page.screenshot({ path: ".qa/screenshots/cms-dashboard-1600.png" });
   });
 

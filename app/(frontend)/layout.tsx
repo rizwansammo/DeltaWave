@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/brand/deltawave_corporate_blue_optical_16px.png",
+        url: "/brand/deltawave_corporate_white_optical_16px.png",
         sizes: "16x16",
         type: "image/png",
       },
-      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.png?v=white-1", sizes: "32x32", type: "image/png" },
       {
-        url: "/brand/deltawave_corporate_blue_optical_48px.png",
+        url: "/brand/deltawave_corporate_white_optical_48px.png",
         sizes: "48x48",
         type: "image/png",
       },

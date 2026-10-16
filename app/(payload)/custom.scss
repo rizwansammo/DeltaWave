@@ -478,3 +478,72 @@ textarea,
     transition: none;
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Sidebar edge toggle: free the brand from Payload's reserved header space.
+// The original NavToggler (and its collapse arrow / keyboard handling) stays
+// intact. Only its desktop placement changes to straddle the content boundary.
+// ---------------------------------------------------------------------------
+.nav .nav__scroll {
+  --nav-padding-block-start: 18px;
+}
+
+.nav .dw-nav-brand {
+  margin-top: 2px;
+  margin-bottom: 22px;
+}
+
+@media (min-width: 769px) {
+  // Payload places this native toggler before the nav/content grid. Position
+  // its centre on the grid boundary only while the sidebar is expanded.
+  .template-default__nav-toggler-wrapper {
+    top: 14px;
+    left: 22px; // Collapsed state: keep the entire control on-screen.
+    width: 0;
+    height: 0;
+    justify-content: center;
+    transition: left var(--nav-trans-time) linear;
+  }
+
+  .template-default__nav-toggler-wrapper:has(.nav-toggler--is-open) {
+    left: var(--nav-width);
+  }
+
+  .template-default__nav-toggler-container {
+    height: 32px;
+    width: 30px;
+    flex: 0 0 30px;
+    justify-content: center;
+  }
+
+  .template-default__nav-toggler {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    color: #17375e;
+    border: 1px solid #bdc7c1;
+    box-shadow: 0 1px 2px rgb(10 25 43 / 12%);
+  }
+
+  .template-default__nav-toggler:hover {
+    background: #edf2f5;
+    border-color: #6e777c;
+  }
+
+  .template-default__nav-toggler:focus-visible {
+    outline: 2px solid #356f55;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  // Payload already has a dedicated working mobile header toggle.
+  // Do not place a second arrow over the mobile drawer/wordmark.
+  .template-default__nav-toggler-wrapper {
+    display: none;
+  }
+}
