@@ -6,7 +6,7 @@ export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
   label: "Site settings",
   admin: {
-    group: "Website settings",
+    group: "Media & settings",
     description: "Business identity, contact details, search defaults, header and footer.",
     components: globalAdminComponents,
   },

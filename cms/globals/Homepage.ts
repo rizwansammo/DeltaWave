@@ -131,7 +131,7 @@ export const Homepage: GlobalConfig = {
   slug: "homepage",
   label: "Homepage",
   admin: {
-    group: "Website settings",
+    group: "Website content",
     description:
       "Copy and media for the homepage composition. The order and layout of sections are fixed by the design system. Save a draft to prepare changes privately; visitors see them after an administrator publishes.",
     components: globalAdminComponents,

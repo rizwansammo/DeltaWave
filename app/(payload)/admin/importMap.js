@@ -1,3 +1,5 @@
+import { SidebarOverview as SidebarOverview_dw } from '../../../components/cms/sidebar-overview'
+import { SidebarUtilities as SidebarUtilities_dw } from '../../../components/cms/sidebar-utilities'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -39,6 +41,8 @@ export const importMap = {
   "/components/cms/admin-logo#AdminLogo": AdminLogo_f4484d451e000dca12c735ee38cba791,
   "/components/cms/dashboard-intro#DashboardIntro": DashboardIntro_4f602d547e44345b0cb11a6af5ac9e99,
   "/components/cms/nav-brand#NavBrand": NavBrand_c4a39bc6e87c6541ac834630d2c5cd83,
+  "/components/cms/sidebar-overview#SidebarOverview": SidebarOverview_dw,
+  "/components/cms/sidebar-utilities#SidebarUtilities": SidebarUtilities_dw,
   "/components/cms/create-first-user#BrandedCreateFirstUser": BrandedCreateFirstUser_f2a786b1e28b674e3032fe7f7896227f,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

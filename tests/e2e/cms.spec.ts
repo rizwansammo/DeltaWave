@@ -51,6 +51,15 @@ test.describe("CMS admin interface", () => {
       "Manrope, Arial, sans-serif",
     );
     expect(await page.evaluate(() => document.fonts.check("13px Manrope"))).toBe(true);
+    // Phase 2A sidebar refinement: branding + native, permission-filtered nav.
+    await expect(page.locator(".dw-nav-overview")).toBeVisible();
+    await expect(page.locator("#nav-global-homepage")).toBeVisible();
+    await expect(page.locator("#nav-media")).toBeVisible();
+    await expect(page.locator(".dw-nav-utilities a[href='/admin/account']")).toBeVisible();
+    await expect(page.locator(".dw-nav-utilities a[href='/']")).toBeVisible();
+    expect(
+      await page.locator("aside.nav").evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).toBe("rgb(19, 43, 70)");
     await page.screenshot({ path: ".qa/screenshots/cms-dashboard-1600.png" });
   });
 

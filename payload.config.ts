@@ -82,7 +82,11 @@ export default buildConfig({
         Logo: "/components/cms/admin-logo#AdminLogo",
         Icon: "/components/cms/admin-icon#AdminIcon",
       },
-      beforeNavLinks: ["/components/cms/nav-brand#NavBrand"],
+      beforeNavLinks: [
+        "/components/cms/nav-brand#NavBrand",
+        "/components/cms/sidebar-overview#SidebarOverview",
+      ],
+      afterNavLinks: ["/components/cms/sidebar-utilities#SidebarUtilities"],
       beforeDashboard: ["/components/cms/dashboard-intro#DashboardIntro"],
       views: {
         createFirstUser: {
