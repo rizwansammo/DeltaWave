@@ -6,6 +6,11 @@ name: Build image
 on:
   push:
     branches: [main]
+    # Documentation and server files are not part of the image.
+    paths-ignore:
+      - "docs/**"
+      - "deploy/**"
+      - "**/*.md"
   workflow_dispatch:
 
 permissions:

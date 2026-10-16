@@ -79,7 +79,7 @@ Screenshots are written to `.qa/screenshots`; comparison images for failures go 
 
 ## Configuration
 
-`pnpm setup:env` creates `.env`; `.env.example` lists every variable. Never commit `.env`. `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_INDEXABLE` are inlined at build time, so build with the values of the environment you deploy to. Online enquiries stay disabled until the Resend and Turnstile variables are set (`docs/prototype/DELIVERY.md` explains them).
+`pnpm setup:env` creates `.env`; `.env.example` lists every variable. Never commit `.env`. `NEXT_PUBLIC_SITE_URL` is inlined at build time; `SITE_INDEXABLE`, SMTP, Turnstile and R2 settings are read at runtime. Online enquiries stay closed until the Turnstile keys are set and an administrator switches them on in **Site settings → Email & enquiries**. Production runs from the GHCR image on the VPS; `docs/PHASE3_REPORT.md` covers deployment, backups and operations.
 
 ## Documents
 
@@ -91,5 +91,6 @@ Screenshots are written to `.qa/screenshots`; comparison images for failures go 
 - `docs/PHASE2A_REPORT.md`: the CMS-driven homepage (Phase 2A)
 - `docs/PHASE2B_REPORT.md`: CMS-driven services, solutions, portfolio and menus (Phase 2B)
 - `docs/PHASE2CD_REPORT.md`: the remaining corporate pages, site settings and draft preview (Phase 2C + 2D)
+- `docs/PHASE3_REPORT.md`: production deployment, stored enquiries, email and operations (Phase 3)
 - `docs/PHASE2_PLAN.md`: the rest of Phase 2
 - `docs/IMAGE_CREDITS.md`: photography and font licences

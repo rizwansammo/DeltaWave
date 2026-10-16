@@ -17,6 +17,7 @@ docker run --rm --network none \
   -v deltawave_media:/media:ro -v "$dest":/backup \
   postgres:18.6-alpine3.24 tar -czf "/backup/media-$stamp.tgz.partial" -C /media .
 mv "$dest/media-$stamp.tgz.partial" "$dest/media-$stamp.tgz"
+chmod 600 "$dest/db-$stamp.dump" "$dest/media-$stamp.tgz"
 
 find "$dest" -maxdepth 1 \( -name 'db-*.dump' -o -name 'media-*.tgz' \) -mtime +14 -delete
 echo "$(date -u +%FT%TZ) backup ok: db-$stamp.dump media-$stamp.tgz"

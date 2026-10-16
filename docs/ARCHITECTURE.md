@@ -15,7 +15,7 @@ DeltaWave Technology runs as **one Next.js application** that serves the public 
 | `/admin`, `/admin/*` | `app/(payload)/admin/[[...segments]]` | Payload admin panel. Sends `X-Robots-Tag: noindex, nofollow`. |
 | `/cms-api/*` | `app/(payload)/cms-api/[...slug]/route.ts` | Payload REST API (`config.routes.api`). Sends `X-Robots-Tag`. |
 | `/api/enquiry` | `app/api/enquiry/route.ts` | The prototype's enquiry endpoint, unchanged. |
-| `/robots.txt`, `/sitemap.xml` | `app/robots.ts`, `app/sitemap.ts` | Robots disallows everything until `NEXT_PUBLIC_INDEXABLE=true`, then still disallows `/admin` and `/cms-api`. |
+| `/robots.txt`, `/sitemap.xml` | `app/robots.ts`, `app/sitemap.ts` | Robots disallows everything until `SITE_INDEXABLE=true` (read per request), then still disallows `/admin` and `/cms-api`. |
 
 The two route groups each have their own root layout, so the admin never loads the site stylesheet and the site never loads Payload's CSS. Static segments (`admin`, `cms-api`, `api`) take precedence over the site's catch-all, and the CMS `pages` collection refuses those addresses as slugs.
 
@@ -113,7 +113,7 @@ Uploads are stored on local disk in `media/` (gitignored; `MEDIA_DIR` overrides 
 | Secrets | `PAYLOAD_SECRET` (32+ characters, enforced at start-up), database URL and provider keys only in the environment. |
 | Enquiry form | Unchanged: same-origin JSON, server validation, size limit, honeypot, timing check, Turnstile verification, Resend receipt required. |
 
-Not yet in place (planned in Phase 2): a Content-Security-Policy, edge rate limiting for `/api/enquiry` and `/cms-api/users/login`, an email adapter for password resets (Payload currently logs emails to the console), and an R2 storage adapter.
+Added in Phase 3: a production Content-Security-Policy (`next.config.ts`), Nginx rate limits for sign-in, password reset and enquiry submissions (`deploy/nginx/`), the SMTP email adapter for password resets and enquiry notifications (`lib/mail.ts`), and the optional R2 storage adapter (`lib/storage.ts`). See `docs/PHASE3_REPORT.md`.
 
 ## Environment variables
 
@@ -122,8 +122,10 @@ Not yet in place (planned in Phase 2): a Content-Security-Policy, edge rate limi
 | `DATABASE_URL` | Payload | Runtime. |
 | `PAYLOAD_SECRET` | Payload | Runtime and build. At least 32 random characters. |
 | `NEXT_PUBLIC_SITE_URL` | Site metadata, enquiry origin check, Payload `serverURL`, CSRF and CORS | **Inlined at build time.** Build with the URL the deployment will serve. Falls back to `https://www.deltawave.tech`. |
-| `NEXT_PUBLIC_INDEXABLE` | robots.txt and page metadata | `false` until a public launch is approved. Inlined at build time. |
-| `ENQUIRY_EMAIL_API_KEY`, `ENQUIRY_FROM_EMAIL`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Enquiry endpoint | Unchanged from the prototype. |
+| `SITE_INDEXABLE` | robots.txt and page metadata | `false` until a public launch is approved. Read at runtime (`NEXT_PUBLIC_INDEXABLE` is still honoured locally). |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Enquiry endpoint | Both required, or the form stays closed. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, `MAIL_ALLOWED_SENDER_DOMAINS` | Payload email adapter (`lib/mail.ts`) | Enquiry notifications and password resets. Production sends nothing without them. |
+| `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_PUBLIC_URL` | Media storage (`lib/storage.ts`) | Optional; without them uploads stay in `MEDIA_DIR`. |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT` | Local Docker database only | |
 
 ## Deployment consequences
