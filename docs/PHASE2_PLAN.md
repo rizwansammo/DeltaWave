@@ -4,6 +4,11 @@ Phase 2 moves the public website from `lib/content.ts` to Payload without changi
 
 ## Status
 
+**Post-2A admin sidebar refinement:** DeltaWave's deep-navy, branded Payload
+navigation is implemented in `docs/CMS_NAV_REFINEMENT.md`. Preserve it while
+working on Phase 2B–2D; those phases should focus on CMS data and publishing,
+not duplicate the sidebar redesign.
+
 **Phase 2A, the CMS-driven homepage, is complete** (`docs/PHASE2A_REPORT.md`):
 
 - The homepage renders on every request from the published Homepage global through a typed Local API data layer (`lib/cms/`), with explicit published, draft, uninitialized and unavailable states.

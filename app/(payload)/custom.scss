@@ -225,3 +225,256 @@ textarea,
     scroll-behavior: auto !important;
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// DeltaWave CMS navigation — navy sidebar / light workspace.
+// Uses Payload's OWN Nav, NavGroup, NavToggler, permissions and mobile drawer.
+// Do not replace the underlying navigation or duplicate its access checks.
+// This styling never applies to the public website.
+// ---------------------------------------------------------------------------
+:root {
+  --nav-width: min(286px, 90vw);
+}
+
+.nav {
+  --dw-navy: #132b46;
+  --dw-navy-raised: #244462;
+  --dw-navy-border: #34506a;
+  --dw-nav-text: #e4edf5;
+  --dw-nav-muted: #9bb3c8;
+  --dw-nav-green: #7dcaa3;
+  background: var(--dw-navy);
+  border-right: 1px solid var(--dw-navy-border);
+  color: var(--dw-nav-text);
+}
+
+// Keep Payload's scroll container, focus behavior and mobile sidebar intact.
+.nav .nav__scroll {
+  --nav-padding-inline-start: 18px;
+  --nav-padding-inline-end: 18px;
+  --nav-padding-block-end: 20px;
+  scrollbar-color: var(--dw-navy-border) transparent;
+}
+
+.nav .nav__wrap {
+  align-items: stretch;
+  min-height: 100%;
+}
+
+.nav .dw-nav-brand {
+  margin: 6px 0 24px;
+  flex-shrink: 0;
+  // Brand geometry is unchanged: a CSS colour treatment on the original files.
+  color: #f5f9ff;
+}
+
+.nav .dw-nav-brand .brand-wordmark {
+  fill: #f5f9ff;
+}
+
+.nav .dw-nav-brand .brand-icon img {
+  filter: brightness(0) invert(1);
+}
+
+.nav .dw-nav-brand:focus-visible,
+.nav .dw-nav-overview:focus-visible,
+.nav .dw-nav-utility:focus-visible,
+.nav .nav__link:focus-visible,
+.nav .nav-group__toggle:focus-visible {
+  outline: 2px solid var(--dw-nav-green);
+  outline-offset: 2px;
+}
+
+.nav .dw-nav-workspace {
+  border-top: 1px solid var(--dw-navy-border);
+  padding-top: 20px;
+}
+
+.nav .dw-nav-caption,
+.nav .nav-group__label {
+  font-family: Manrope, Arial, sans-serif;
+  color: var(--dw-nav-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.125em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.nav .dw-nav-caption {
+  display: block;
+  margin: 0 10px 8px;
+}
+
+.nav .dw-nav-overview,
+.nav .dw-nav-utility,
+.nav .nav__link {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Manrope, Arial, sans-serif;
+  color: var(--dw-nav-text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.nav .dw-nav-overview {
+  position: relative;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.nav .dw-nav-overview svg {
+  flex-shrink: 0;
+  color: var(--dw-nav-green);
+}
+
+.nav .dw-nav-overview:hover,
+.nav .dw-nav-utility:hover,
+.nav a.nav__link:hover {
+  background: var(--dw-navy-raised);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.nav .dw-nav-overview--active,
+.nav .dw-nav-utility--active,
+.nav .nav__link:has(.nav__link-indicator) {
+  background: var(--dw-navy-raised);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.nav .dw-nav-overview--active::before,
+.nav .dw-nav-utility--active::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 3px;
+  background: var(--dw-nav-green);
+}
+
+.nav .nav-group {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.nav .nav-group__toggle {
+  box-sizing: border-box;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 8px 10px;
+  color: var(--dw-nav-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+}
+
+.nav .nav-group__toggle:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.nav .nav-group__indicator {
+  color: var(--dw-nav-muted);
+}
+
+.nav .nav-group__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// Homepage appears first within the Website content group, without changing
+// Payload's permission-filtered list or creating a duplicate link.
+.nav #nav-global-homepage {
+  order: -1;
+}
+
+.nav .nav__link {
+  position: relative;
+  padding: 9px 10px 9px 28px;
+  margin: 0;
+}
+
+.nav .nav__link::before {
+  content: "›";
+  position: absolute;
+  left: 12px;
+  color: var(--dw-nav-muted);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.nav .nav__link:has(.nav__link-indicator)::before {
+  color: var(--dw-nav-green);
+}
+
+.nav .nav__link-indicator {
+  inset-inline-start: 0;
+  left: 0;
+  top: 8px;
+  height: calc(100% - 16px);
+  width: 3px;
+  background: var(--dw-nav-green);
+  border-radius: 0;
+}
+
+.nav .dw-nav-utilities {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--dw-navy-border);
+}
+
+.nav .dw-nav-utility {
+  position: relative;
+  padding: 9px 12px;
+}
+
+.nav .dw-nav-utility svg {
+  color: var(--dw-nav-green);
+  flex-shrink: 0;
+}
+
+.nav .nav__controls {
+  width: 100%;
+  margin-top: 10px;
+  gap: 8px;
+  padding: 12px 10px 0;
+  border-top: 1px solid var(--dw-navy-border);
+  color: var(--dw-nav-text);
+}
+
+.nav .nav__controls a,
+.nav .nav__controls button {
+  color: var(--dw-nav-text);
+}
+
+.nav .nav__controls a:hover,
+.nav .nav__controls button:hover {
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav .dw-nav-overview,
+  .nav .dw-nav-utility,
+  .nav .nav__link {
+    transition: none;
+  }
+}
