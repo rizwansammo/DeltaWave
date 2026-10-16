@@ -1,0 +1,54 @@
+{
+  "name": "deltawave-technology",
+  "version": "0.2.0",
+  "private": true,
+  "description": "DeltaWave Technology corporate website and Payload CMS",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "setup:env": "node scripts/setup-env.mjs",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:stop": "docker compose stop postgres",
+    "db:logs": "docker compose logs -f postgres",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import ./tests/register.mjs --test tests/enquiry.test.mjs tests/content.test.mjs tests/brand.test.mjs tests/access.test.mjs tests/routing.test.mjs",
+    "test:render": "node --import ./tests/register.mjs tests/render.mjs",
+    "test:html": "python tests/inspect_html.py",
+    "test:e2e": "node scripts/prepare-test-db.mjs && playwright test",
+    "payload": "payload",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.90.2",
+    "@payloadcms/next": "3.90.2",
+    "@payloadcms/richtext-lexical": "3.90.2",
+    "@payloadcms/ui": "3.90.2",
+    "graphql": "16.14.2",
+    "lucide-react": "1.31.0",
+    "next": "16.4.1",
+    "payload": "3.90.2",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "10.12.0",
+    "eslint-config-next": "16.4.0",
+    "typescript": "5.9.3"
+  }
+}

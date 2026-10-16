@@ -1,0 +1,27 @@
+# Supply-chain policy carried over from the prototype: only install package
+# versions that have been public for at least seven days (10080 minutes).
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  # Security releases published 2026-10-14, pinned to exact versions only.
+  # Next.js: GHSA-673q-mjm6-r5xr, GHSA-2464-fhr4-w9xw (critical RCE) and
+  # GHSA-p3m5-59mp-jv5r. React: GHSA-xqc2-xf4c-x3h3 (critical RCE) and
+  # GHSA-h3gv-c5rc-p453. All of these versions carry npm provenance.
+  # Remove each entry once the version is older than seven days.
+  - next@16.4.1
+  - "@next/env@16.4.1"
+  - "@next/swc-darwin-arm64@16.4.1"
+  - "@next/swc-darwin-x64@16.4.1"
+  - "@next/swc-linux-arm64-gnu@16.4.1"
+  - "@next/swc-linux-arm64-musl@16.4.1"
+  - "@next/swc-linux-x64-gnu@16.4.1"
+  - "@next/swc-linux-x64-musl@16.4.1"
+  - "@next/swc-win32-arm64-msvc@16.4.1"
+  - "@next/swc-win32-x64-msvc@16.4.1"
+  - react@19.2.9
+  - react-dom@19.2.9
+# Dependency lifecycle scripts run only when explicitly allowed here.
+strictDepBuilds: true
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true

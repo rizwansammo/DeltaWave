@@ -1,0 +1,227 @@
+// DeltaWave admin theme for Payload 3.
+//
+// Payload keeps its own styles inside `@layer payload-default`, so these
+// unlayered rules take precedence through supported CSS variables and BEM
+// classes, without editing Payload's source. Brand colours come from
+// styles/tokens.css (--ink, --muted, --blue, --green, --line, --wash) and the
+// lockup itself from components/brand/brand.css, inlined here by Sass so the
+// public site's stylesheet stays a single, unshared file.
+@use "../../styles/fonts";
+@use "../../styles/tokens";
+@use "../../components/brand/brand";
+
+:root {
+  --font-body: Manrope, Arial, sans-serif;
+
+  // Sharp corners throughout, matching the public site.
+  --style-radius-s: 0px;
+  --style-radius-m: 0px;
+  --style-radius-l: 0px;
+
+  // Neutral surface and text scale, white to ink, from the site palette.
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f3f5f2; // --wash
+  --theme-elevation-100: #eaedeb;
+  --theme-elevation-150: #dce1df; // --line
+  --theme-elevation-200: #cdd4d0;
+  --theme-elevation-250: #bdc7c1; // site form border
+  --theme-elevation-300: #aab4af;
+  --theme-elevation-350: #98a29e;
+  --theme-elevation-400: #89928e;
+  --theme-elevation-450: #7b8486;
+  --theme-elevation-500: #6e777c;
+  --theme-elevation-550: #626c72; // --muted
+  --theme-elevation-600: #545e65;
+  --theme-elevation-650: #475159;
+  --theme-elevation-700: #3a444d;
+  --theme-elevation-750: #2c3640;
+  --theme-elevation-800: #17212b; // --ink, Payload's text colour
+  --theme-elevation-850: #131b23;
+  --theme-elevation-900: #0f151c;
+  --theme-elevation-950: #0a0f14;
+  --theme-elevation-1000: #05080b;
+
+  // Payload's "success" scale drives focus rings, selection and published
+  // states. It becomes the DeltaWave green (#356f55 at 500).
+  --color-success-50: #eff4f1;
+  --color-success-100: #dfe8e4;
+  --color-success-150: #cedad3;
+  --color-success-200: #b6cbc2;
+  --color-success-250: #a2bdb1;
+  --color-success-300: #8eaea0;
+  --color-success-350: #789f8d;
+  --color-success-400: #618f7a;
+  --color-success-450: #4b7f68;
+  --color-success-500: #356f55;
+  --color-success-550: #30644c;
+  --color-success-600: #2a5944;
+  --color-success-650: #254e3c;
+  --color-success-700: #204333;
+  --color-success-750: #1b382b;
+  --color-success-800: #152c22;
+  --color-success-850: #10211a;
+  --color-success-900: #0b1611;
+  --color-success-950: #050b09;
+
+  // Blue scale around the corporate blue (#17375e at 600).
+  --color-blue-50: #eff1f4;
+  --color-blue-100: #dce1e7;
+  --color-blue-150: #c5cdd7;
+  --color-blue-200: #aeb9c7;
+  --color-blue-250: #97a5b7;
+  --color-blue-300: #7f91a7;
+  --color-blue-350: #687d96;
+  --color-blue-400: #516986;
+  --color-blue-450: #3a5576;
+  --color-blue-500: #244d79;
+  --color-blue-550: #1e426c;
+  --color-blue-600: #17375e;
+  --color-blue-650: #142f50;
+  --color-blue-700: #102742;
+  --color-blue-750: #0d1e34;
+  --color-blue-800: #091626;
+  --color-blue-850: #07111c;
+  --color-blue-900: #050b13;
+  --color-blue-950: #020609;
+
+  --accessibility-outline: 2px solid var(--green);
+  --accessibility-outline-offset: 2px;
+}
+
+// The same rule as the public site: no rounded corners anywhere.
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+::selection {
+  background: #d9e6de;
+  color: var(--ink);
+}
+
+// Buttons: corporate blue primary actions, outlined secondary actions.
+.btn--style-primary {
+  --color: #ffffff;
+  --bg-color: var(--blue);
+  --hover-bg: #244d79;
+  --hover-color: #ffffff;
+}
+
+.btn--style-primary.btn--disabled {
+  --color: var(--theme-elevation-600);
+  --bg-color: var(--theme-elevation-150);
+  --hover-bg: var(--theme-elevation-150);
+  --hover-color: var(--theme-elevation-600);
+}
+
+.btn--style-secondary {
+  --color: var(--blue);
+  --btn-border: 1px solid var(--blue);
+  --hover-color: #244d79;
+  --hover-btn-border: 1px solid #244d79;
+}
+
+// Flat inputs like the site's enquiry form.
+input,
+textarea,
+.rs__control {
+  box-shadow: none;
+}
+
+// Brand placements.
+.dw-auth-brand,
+.login__brand {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: calc(var(--base) * 1.5);
+}
+
+.dw-nav-brand {
+  margin-bottom: calc(var(--base) * 1.2);
+}
+
+.dw-nav-brand:focus-visible,
+.dw-admin-logo:focus-visible {
+  outline: var(--accessibility-outline);
+  outline-offset: 4px;
+}
+
+// Header icon: the lockup icon (49.25 x 39.5) scaled uniformly to 18px tall.
+.step-nav__home {
+  width: auto;
+}
+
+.dw-admin-icon {
+  --dw-icon-scale: calc(18 / 39.5);
+  display: block;
+  width: calc(49.25px * var(--dw-icon-scale));
+  height: 18px;
+}
+
+.dw-admin-icon .brand-icon {
+  transform: scale(var(--dw-icon-scale));
+  transform-origin: top left;
+}
+
+@media (max-width: 768px) {
+  .dw-admin-icon {
+    --dw-icon-scale: calc(16 / 39.5);
+    height: 16px;
+  }
+}
+
+// Dashboard orientation block.
+.dw-dashboard-intro {
+  max-width: 720px;
+  padding-bottom: calc(var(--base) * 1.5);
+  margin-bottom: calc(var(--base) * 1.5);
+  border-bottom: 1px solid var(--line);
+
+  h2 {
+    margin: calc(var(--base) * 0.5) 0;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    color: var(--muted);
+    max-width: 620px;
+  }
+
+  .dw-dashboard-note {
+    margin-top: calc(var(--base) * 0.6);
+    padding-left: 12px;
+    border-left: 2px solid var(--green);
+    font-size: 12px;
+  }
+}
+
+.dw-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--green) !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  line-height: 1.6;
+  text-transform: uppercase;
+
+  > span {
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

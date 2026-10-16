@@ -1,0 +1,36 @@
+/* DeltaWave corporate lockup geometry. Single source for the public site
+   and the CMS admin. Values are copied unchanged from the approved prototype
+   (DeltaWave-UI app/globals.css). Do not edit without a verified brand review;
+   see docs/BRANDING_SPEC.md. Responsive scaling stays in the layout styles. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  width: 224px;
+  height: 40px;
+  color: var(--blue);
+}
+.brand-icon {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  width: 49.25px;
+  height: 39.5px;
+  flex: 0 0 49.25px;
+}
+.brand-icon img {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  max-width: none;
+  left: -7.375px;
+  top: -9.75px;
+}
+.brand-wordmark {
+  font-family: ELNATH, sans-serif;
+  font-kerning: normal;
+  fill: var(--blue);
+  overflow: visible;
+  flex: 0 0 162px;
+}

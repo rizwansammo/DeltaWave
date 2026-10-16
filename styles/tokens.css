@@ -1,0 +1,13 @@
+/* DeltaWave design tokens shared by the public site and the CMS admin.
+   Source: DeltaWave-UI app/globals.css (approved prototype), unchanged. */
+:root {
+  --ink: #17212b;
+  --muted: #626c72;
+  --blue: #17375e;
+  --green: #356f55;
+  --line: #dce1df;
+  --wash: #f3f5f2;
+  --sky: #edf2f5;
+  --gutter: clamp(24px, 5vw, 88px);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
