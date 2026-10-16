@@ -1,5 +1,7 @@
 export const site = {
-  indexable: process.env.NEXT_PUBLIC_INDEXABLE === "true",
+  // SITE_INDEXABLE is read at runtime, so one image can launch unindexed and
+  // be opened to search engines later without a rebuild.
+  indexable: (process.env.SITE_INDEXABLE ?? process.env.NEXT_PUBLIC_INDEXABLE) === "true",
   name: "DeltaWave Technology",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.deltawave.tech",
   email: "rizwan@deltawave.tech",

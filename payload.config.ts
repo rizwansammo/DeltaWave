@@ -16,6 +16,7 @@ import {
 } from "@payloadcms/richtext-lexical";
 import { buildConfig } from "payload";
 import sharp from "sharp";
+import { Enquiries } from "./cms/collections/Enquiries";
 import { Media } from "./cms/collections/Media";
 import { Pages } from "./cms/collections/Pages";
 import { PortfolioProjects } from "./cms/collections/PortfolioProjects";
@@ -27,7 +28,9 @@ import { Homepage } from "./cms/globals/Homepage";
 import { PageContent } from "./cms/globals/PageContent";
 import { SiteSettings } from "./cms/globals/SiteSettings";
 import { livePreviewBreakpoints, livePreviewEntities, previewPathFor, previewUrl } from "./cms/preview";
+import { emailAdapter } from "./lib/mail";
 import { site } from "./lib/site";
+import { storagePlugins } from "./lib/storage";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -115,8 +118,14 @@ export default buildConfig({
     Solutions,
     PortfolioProjects,
     Media,
+    Enquiries,
     Users,
   ],
+  // One SMTP transport for password resets and enquiry notifications
+  // (lib/mail.ts); credentials come from the environment only.
+  email: emailAdapter(),
+  // Cloudflare R2 when configured, otherwise the persistent media volume.
+  plugins: storagePlugins(),
   globals: [Homepage, PageContent, SiteSettings],
   // A deliberately small rich text toolset keeps editorial pages consistent
   // with the design system.

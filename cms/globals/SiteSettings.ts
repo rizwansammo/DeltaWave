@@ -3,6 +3,7 @@ import { linkGroup, updatedByField, validateHref } from "../fields";
 import { generatePreviewURL } from "../preview";
 import { site } from "../../lib/site";
 import { globalAccess, globalAdminComponents, globalHooks, globalVersions } from "../versioned";
+import { enquirySettingsTab, testEmailEndpoint } from "./enquiry-settings";
 
 export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
@@ -17,6 +18,7 @@ export const SiteSettings: GlobalConfig = {
   access: globalAccess,
   versions: globalVersions,
   hooks: globalHooks,
+  endpoints: [testEmailEndpoint],
   fields: [
     {
       type: "tabs",
@@ -207,6 +209,7 @@ export const SiteSettings: GlobalConfig = {
             },
           ],
         },
+        enquirySettingsTab,
       ],
     },
     updatedByField,

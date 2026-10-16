@@ -9,6 +9,8 @@ export type Enquiry = {
   website: string;
   challenge: string;
   startedAt: number;
+  /** Random per form, so a retried request is stored once. */
+  submissionId: string;
 };
 /** The options the form offers when the CMS cannot be read. */
 export const acceptedServices = [
@@ -43,6 +45,7 @@ export function validateEnquiry(
     challenge: str("challenge"),
     consent: raw.consent === true,
     startedAt: typeof raw.startedAt === "number" ? raw.startedAt : 0,
+    submissionId: str("submissionId"),
   };
   if (
     data.name.length < 2 ||
@@ -73,23 +76,38 @@ export function validateEnquiry(
     data.startedAt > Date.now() + 60000
   )
     errors.form = "Please reload the form and try again.";
+  if (data.submissionId && !/^[A-Za-z0-9-]{16,64}$/.test(data.submissionId))
+    errors.form = "Please reload the form and try again.";
   if (data.challenge.length > 2048)
     errors.form = "The security check could not be validated.";
   return { data: Object.keys(errors).length ? undefined : data, errors };
 }
+export type StoredEnquiry = { id: number | string; duplicate: boolean; notified: boolean };
+
 export type EnquiryConfig = {
-  apiKey?: string;
-  from?: string;
-  to: string;
   turnstileSecret?: string;
   siteKey?: string;
   expectedUrl: string;
   production: boolean;
   /** Published service options; defaults to the approved list. */
   allowedServices?: string[];
+  /** Administrators accept online enquiries (Site settings → Email & enquiries). */
+  accepting?: boolean;
+  /** Shown to visitors when online enquiries are unavailable. */
+  contactEmail?: string;
+  /** Saves the enquiry. Required: nothing is sent unless it was stored. */
+  store?: (enquiry: Enquiry) => Promise<StoredEnquiry>;
+  /** Emails the notification and records the outcome; true when accepted. */
+  notify?: (id: number | string, enquiry: Enquiry) => Promise<boolean>;
 };
+
+/**
+ * Online enquiries need the spam check and somewhere to store them, and an
+ * administrator must have switched them on. Email is not required: an
+ * enquiry is saved even while notifications cannot be sent.
+ */
 export function configured(c: EnquiryConfig) {
-  return !!(c.apiKey && c.from && c.turnstileSecret && c.siteKey);
+  return !!(c.turnstileSecret && c.siteKey && c.accepting && c.store);
 }
 const limits = new Map<string, { count: number; reset: number }>();
 export function checkRateLimit(key: string, now = Date.now()) {
@@ -103,6 +121,13 @@ export function checkRateLimit(key: string, now = Date.now()) {
   limits.set(key, { count: 1, reset: now + 15 * 60 * 1000 });
   return true;
 }
+/**
+ * The visitor's address. The site's own Nginx sets X-Real-IP and overwrites
+ * any value a client sends; the application listens on localhost only, so no
+ * other proxy can reach it. Client-supplied headers are never trusted.
+ */
+export const clientIp = (request: Request) =>
+  request.headers.get("x-real-ip")?.trim() || "unknown";
 const response = (status: number, body: Record<string, unknown>) =>
   Response.json(body, {
     status,
@@ -116,6 +141,7 @@ export async function handleEnquiry(
   c: EnquiryConfig,
   fetcher: typeof fetch = fetch,
 ) {
+  const contact = c.contactEmail ? ` Please email ${c.contactEmail}.` : "";
   const origin = request.headers.get("origin");
   let allowed = false;
   try {
@@ -171,10 +197,9 @@ export async function handleEnquiry(
     });
   if (!configured(c))
     return response(503, {
-      message:
-        "Online enquiries are being prepared. Please email rizwan@deltawave.tech.",
+      message: "Online enquiries are being prepared." + contact,
     });
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  const ip = clientIp(request);
   if (!checkRateLimit(ip))
     return response(429, {
       message:
@@ -217,50 +242,41 @@ export async function handleEnquiry(
         message:
           "The security check expired or could not be verified. Please try again.",
       });
-    const result = await fetcher("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${c.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: c.from,
-        to: [c.to],
-        reply_to: data.email,
-        subject: `Website enquiry: ${data.service}`,
-        text: [
-          `Name: ${data.name}`,
-          `Email: ${data.email}`,
-          `Phone: ${data.phone}`,
-          `Organization: ${data.company || "Not supplied"}`,
-          `Service: ${data.service}`,
-          "",
-          "Project description:",
-          data.description,
-          "",
-          "Consent: Use these details to respond to this enquiry.",
-        ].join("\n"),
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!result.ok)
-      return response(502, {
-        message:
-          "The email service could not accept your enquiry. Please email us directly.",
-      });
-    const receipt = (await result.json()) as { id?: string };
-    if (!receipt.id)
-      return response(502, {
-        message:
-          "The email service did not confirm acceptance. Please contact us directly.",
-      });
-    return response(200, {
-      message: "Your enquiry has been accepted by our email service.",
-    });
   } catch {
-    return response(502, {
-      message:
-        "We could not confirm that the enquiry was sent. Please email us directly.",
+    return response(503, {
+      message: "The security check is unavailable right now. Please try again shortly." + contact,
     });
   }
+
+  // 1. Store first: an enquiry is never lost because email failed.
+  let stored: StoredEnquiry;
+  try {
+    stored = await c.store!(data);
+  } catch {
+    return response(503, {
+      message: "Your enquiry could not be saved." + (contact || " Please try again later."),
+    });
+  }
+  if (stored.duplicate)
+    return response(200, {
+      saved: true,
+      duplicate: true,
+      notified: stored.notified,
+      message: "Thank you. We have already received this enquiry.",
+    });
+
+  // 2. Then notify, and say exactly what happened.
+  let notified = false;
+  try {
+    notified = (await c.notify?.(stored.id, data)) ?? false;
+  } catch {
+    notified = false;
+  }
+  return response(200, {
+    saved: true,
+    notified,
+    message: notified
+      ? "Thank you. Your enquiry has been received and our team has been notified."
+      : "Thank you. Your enquiry has been saved and our team will review it.",
+  });
 }

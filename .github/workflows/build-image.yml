@@ -1,0 +1,78 @@
+# Builds the production image and publishes it to GHCR, tagged with the
+# commit SHA. Publishing does not deploy: the server is updated deliberately
+# by pinning a digest in /opt/DeltaWave (see docs/PHASE3_REPORT.md).
+name: Build image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/rizwansammo/deltawave
+
+jobs:
+  verify:
+    name: Type-check, lint and unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # Unit tests load the Payload config but never connect or sign anything.
+      PAYLOAD_SECRET: ci-placeholder-not-a-real-secret-0000000000
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:1/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+
+  image:
+    name: Build and publish image
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}:sha-${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=https://www.deltawave.tech
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Record the immutable reference
+        run: |
+          {
+            echo "### Published"
+            echo ""
+            echo "Tag: \`${IMAGE}:sha-${GITHUB_SHA}\`"
+            echo ""
+            echo "Digest (deploy this): \`${IMAGE}@${{ steps.build.outputs.digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

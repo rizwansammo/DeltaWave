@@ -73,6 +73,7 @@ export interface Config {
     solutions: Solution;
     'portfolio-projects': PortfolioProject;
     media: Media;
+    enquiries: Enquiry;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -87,6 +88,7 @@ export interface Config {
     solutions: SolutionsSelect<false> | SolutionsSelect<true>;
     'portfolio-projects': PortfolioProjectsSelect<false> | PortfolioProjectsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -476,6 +478,34 @@ export interface PortfolioProject {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Enquiries from the website's contact form. Visible to administrators only. Update the status as you follow up, and delete records once they are no longer needed.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  status: 'New' | 'Contacted' | 'In progress' | 'Closed';
+  /**
+   * Sent means the mail server accepted it, not that it reached the inbox.
+   */
+  notification: 'Pending' | 'Sent' | 'Failed';
+  notificationNote?: string | null;
+  internalNotes?: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string | null;
+  service: string;
+  description: string;
+  consent?: boolean | null;
+  submittedAt: string;
+  submissionKey?: string | null;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -522,6 +552,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
       } | null)
     | ({
         relationTo: 'users';
@@ -802,6 +836,28 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  status?: T;
+  notification?: T;
+  notificationNote?: T;
+  internalNotes?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  company?: T;
+  service?: T;
+  description?: T;
+  consent?: T;
+  submittedAt?: T;
+  submissionKey?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1639,6 +1695,36 @@ export interface SiteSetting {
       href?: string | null;
     };
   };
+  enquiries?: {
+    /**
+     * Turns on the contact form. It also needs the Cloudflare Turnstile keys on the server. Publish an accurate privacy notice first: enquiries are stored in this CMS.
+     */
+    acceptOnline?: boolean | null;
+    /**
+     * Enquiries are always saved first; the email is a notification.
+     */
+    notify?: boolean | null;
+    senderName?: string | null;
+    /**
+     * Leave empty to use the server's default sender.
+     */
+    senderEmail?: string | null;
+    /**
+     * Where new enquiries are emailed. Separate from the public contact email, so changing one never changes the other.
+     */
+    recipient?: string | null;
+    additionalRecipients?:
+      | {
+          email: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Sets Reply-To to the address the visitor entered, so replying answers them.
+     */
+    replyToVisitor?: boolean | null;
+    subjectPrefix?: string | null;
+  };
   updatedBy?: (number | null) | User;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
@@ -2142,6 +2228,23 @@ export interface SiteSettingsSelect<T extends boolean = true> {
               label?: T;
               href?: T;
             };
+      };
+  enquiries?:
+    | T
+    | {
+        acceptOnline?: T;
+        notify?: T;
+        senderName?: T;
+        senderEmail?: T;
+        recipient?: T;
+        additionalRecipients?:
+          | T
+          | {
+              email?: T;
+              id?: T;
+            };
+        replyToVisitor?: T;
+        subjectPrefix?: T;
       };
   updatedBy?: T;
   _status?: T;

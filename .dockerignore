@@ -1,0 +1,20 @@
+# Never in the image: secrets, local data, build output and test artefacts.
+.env
+.env.*
+!.env.example
+.git
+.github
+.claude
+.qa
+.next
+node_modules
+media
+test-results
+playwright-report
+tests
+docs
+deploy
+*.log
+*.tsbuildinfo
+Dockerfile
+.dockerignore

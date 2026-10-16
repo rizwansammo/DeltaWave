@@ -55,6 +55,8 @@ export async function seedPhoto(payload: Payload, key: string, results: SeedResu
  * seeded site serves the approved images byte for byte.
  */
 async function installApprovedWebp(payload: Payload, doc: Media, file: string, req?: Partial<PayloadRequest>) {
+  // With R2 the files are not on this disk; Payload's generated sizes are kept.
+  if (process.env.R2_BUCKET) return [];
   const mediaDir = path.resolve(payload.collections.media.config.upload.staticDir ?? "media");
   const approved = new Map<string, string>();
   for (const name of [`${file}-640.webp`, `${file}-1100.webp`, `${file}.webp`]) {

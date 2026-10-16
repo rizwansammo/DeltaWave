@@ -328,3 +328,60 @@ export const approvedPrivacyPage = {
 
 export type PrivacyInline = string | { text: string; href: string } | { br: true };
 export type PrivacyBlock = { h2: string } | { p: PrivacyInline[] };
+
+/**
+ * Phase 3 revision of the privacy notice for stored enquiries, saved as a
+ * DRAFT for the owner's review (scripts/privacy-draft.ts). Not legal advice
+ * and not published automatically: the retention period in square brackets
+ * must be decided by DeltaWave before publishing.
+ */
+export const privacyRevisionForEnquiries: PrivacyBlock[] = [
+  { h2: "Information you provide" },
+  {
+    p: [
+      "The enquiry form asks for your name, email address, phone number, optional organization, service interest and a project description. Please do not include passwords, payment card information or sensitive records.",
+    ],
+  },
+  { h2: "Why we use it" },
+  {
+    p: [
+      "We use the details to understand your request, communicate with you and assess a possible engagement. Submitting an enquiry does not subscribe you to marketing.",
+    ],
+  },
+  { h2: "How enquiries are stored" },
+  {
+    p: [
+      "Each enquiry you send is saved in the content management system of this website, hosted on our own server. Only DeltaWave administrators can open saved enquiries; website editors and visitors cannot. We record the status of our follow-up and internal notes alongside your enquiry.",
+    ],
+  },
+  { h2: "Delivery and security" },
+  {
+    p: [
+      "The form uses Cloudflare Turnstile for spam protection. After an enquiry is saved, a notification is sent by email to the business inbox through our email service. These providers process the information needed to perform those services. If the notification cannot be sent, your enquiry stays saved and is reviewed in the system; the form only confirms what actually happened.",
+    ],
+  },
+  { h2: "Retention and your requests" },
+  {
+    p: [
+      "Enquiries are kept while they are needed to respond and to manage a possible engagement, and for no longer than [retention period to be confirmed by DeltaWave, for example 24 months after our last contact]. For access, correction or deletion requests, contact ",
+      { text: site.email, href: "mailto:" + site.email },
+      ". Any legal or contractual retention requirements will be considered when handling a request.",
+    ],
+  },
+  { h2: "Cookies and analytics" },
+  {
+    p: [
+      "This website does not add advertising or analytics cookies. The spam protection provider may use technical signals for verification. Signed-in staff use a session cookie for the content management system.",
+    ],
+  },
+  { h2: "Business contact" },
+  {
+    p: [
+      "DeltaWave Technology",
+      { br: true },
+      site.location,
+      { br: true },
+      { text: site.email, href: "mailto:" + site.email },
+    ],
+  },
+];

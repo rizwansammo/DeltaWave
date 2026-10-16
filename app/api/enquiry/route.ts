@@ -1,21 +1,26 @@
 import { configured, handleEnquiry, type EnquiryConfig } from "@/lib/enquiry";
 import { getServiceOptions } from "@/lib/cms/contact";
+import { getEnquiryRouting, notifyEnquiry, storeEnquiry } from "@/lib/cms/enquiries";
 import { getSiteSettings } from "@/lib/cms/pages";
 import { site } from "@/lib/site";
 export const dynamic = "force-dynamic";
-function config(): EnquiryConfig {
+
+// Read at runtime (not NEXT_PUBLIC_*, which is fixed at build time), so one
+// image serves any environment.
+function environment(): Pick<EnquiryConfig, "turnstileSecret" | "siteKey" | "expectedUrl" | "production"> {
   return {
-    apiKey: process.env.ENQUIRY_EMAIL_API_KEY,
-    from: process.env.ENQUIRY_FROM_EMAIL,
-    to: site.email,
     turnstileSecret: process.env.TURNSTILE_SECRET_KEY,
-    siteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+    siteKey: process.env.TURNSTILE_SITE_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     expectedUrl: site.url,
     production: process.env.NODE_ENV === "production",
   };
 }
-export function GET() {
-  const c = config();
+
+/** The published routing, or null while the CMS cannot be read (fails closed). */
+const routing = () => getEnquiryRouting().catch(() => null);
+
+export async function GET() {
+  const c = { ...environment(), accepting: (await routing())?.accepting ?? false, store: storeEnquiry };
   return Response.json(
     { enabled: configured(c), siteKey: configured(c) ? c.siteKey : undefined },
     {
@@ -26,16 +31,21 @@ export function GET() {
     },
   );
 }
+
 export async function POST(request: Request) {
-  // The accepted services and the delivery inbox follow the published CMS
-  // values, so the form and the server agree on what may be submitted.
-  const [{ settings }, allowedServices] = await Promise.all([
+  // The accepted services follow the published categories, so the form and
+  // the server agree on what may be submitted.
+  const [{ settings }, allowedServices, route] = await Promise.all([
     getSiteSettings(),
     getServiceOptions(),
+    routing(),
   ]);
   return handleEnquiry(request, {
-    ...config(),
-    to: settings.email || site.email,
+    ...environment(),
     allowedServices,
+    accepting: route?.accepting ?? false,
+    contactEmail: settings.email || site.email,
+    store: storeEnquiry,
+    notify: (id, enquiry) => notifyEnquiry(id, enquiry, route ?? undefined),
   });
 }

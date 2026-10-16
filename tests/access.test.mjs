@@ -101,3 +101,49 @@ test("links accept site paths and safe schemes only", () => {
   for (const bad of ["javascript:alert(1)", "//evil.example", "http://insecure.example", "data:text/html,x", "contact"])
     assert.notEqual(validateHref(bad, {}), true, bad);
 });
+
+test("enquiries are administrator-only and never created through the API", async () => {
+  const { Enquiries } = await import("../cms/collections/Enquiries.ts");
+  const { access } = Enquiries;
+  for (const user of [null, editor]) {
+    for (const op of ["read", "update", "delete", "create"])
+      assert.equal(access[op]({ req: req(user) }), false, `${op} for ${user ? "editor" : "visitor"}`);
+  }
+  assert.equal(access.read({ req: req(admin) }), true);
+  assert.equal(access.update({ req: req(admin) }), true);
+  assert.equal(access.delete({ req: req(admin) }), true);
+  assert.equal(access.create({ req: req(admin) }), false, "only the enquiry route stores them");
+  assert.equal(Enquiries.admin.hidden({ user: editor }), true);
+  assert.equal(Enquiries.admin.hidden({ user: admin }), false);
+  // What the visitor submitted cannot be changed afterwards.
+  const visitorFields = Enquiries.fields
+    .flatMap((f) => (f.fields ? f.fields : [f]))
+    .filter((f) => ["name", "email", "phone", "description", "submittedAt"].includes(f.name));
+  assert.equal(visitorFields.length, 5);
+  for (const f of visitorFields) assert.equal(f.access.update({ req: req(admin) }), false, f.name);
+});
+
+test("enquiry routing settings are readable and writable by administrators only", async () => {
+  const { enquirySettingsTab } = await import("../cms/globals/enquiry-settings.ts");
+  const guarded = enquirySettingsTab.fields.filter((f) => f.type !== "ui");
+  assert.ok(guarded.length >= 7);
+  for (const f of guarded) {
+    assert.equal(f.access.read({ req: req(null) }), false, `${f.name} hidden from visitors`);
+    assert.equal(f.access.update({ req: req(editor) }), false, `${f.name} not editable by editors`);
+    assert.equal(f.access.update({ req: req(admin) }), true);
+  }
+  const sender = guarded.find((f) => f.name === "senderEmail");
+  assert.equal(sender.validate("website@deltawave.tech"), true);
+  assert.notEqual(sender.validate("website@attacker.example"), true);
+
+  // A receiver is required only once enquiries are accepted and emailed, so
+  // the rest of Site settings can be published before email is set up.
+  const recipient = guarded.find((f) => f.name === "recipient");
+  const validationReq = { payload: { collections: {}, config: { collections: [] } }, t: (key) => key };
+  const check = (value, siblingData) => recipient.validate(value, { siblingData, required: false, req: validationReq });
+  assert.equal(check(undefined, { acceptOnline: false, notify: true }), true);
+  assert.equal(check(undefined, { acceptOnline: true, notify: false }), true);
+  assert.notEqual(check(undefined, { acceptOnline: true, notify: true }), true);
+  assert.equal(check("enquiries@deltawave.tech", { acceptOnline: true, notify: true }), true);
+  assert.notEqual(check("not an address", { acceptOnline: true, notify: true }), true);
+});

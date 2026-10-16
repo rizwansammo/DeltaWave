@@ -41,6 +41,11 @@ declare global {
 // A ?service= preselection from the address bar. The server snapshot is empty,
 // so the first client render matches the static HTML.
 const ignoreChanges = () => () => {};
+/** A random ID for one submission, so a retried request is stored once. */
+const newSubmissionId = () =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 function requestedService(options: string[]) {
   const requested = new URLSearchParams(location.search).get("service");
   return requested && options.includes(requested) ? requested : "";
@@ -75,10 +80,12 @@ export function ContactSection({
   const widget = useRef<HTMLDivElement>(null),
     widgetId = useRef<string | null>(null),
     started = useRef(0),
+    submission = useRef(""),
     formRef = useRef<HTMLFormElement>(null),
     statusRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     started.current = Date.now();
+    submission.current = newSubmissionId();
     let alive = true;
     let script: HTMLScriptElement | undefined;
     fetch("/api/enquiry")
@@ -183,6 +190,7 @@ export function ContactSection({
           consent: !!values.consent,
           challenge,
           startedAt: started.current,
+          submissionId: submission.current,
         }),
       });
       const data = (await response.json()) as {
@@ -197,12 +205,13 @@ export function ContactSection({
         );
       }
       setState("success");
-      setMessage(
-        "Your enquiry has been accepted by our email service. Thank you for sharing your project.",
-      );
+      // The server says whether the enquiry was saved and whether the team
+      // was notified; it never claims an email that was not accepted.
+      setMessage(data.message || "Thank you. Your enquiry has been saved.");
       formRef.current?.reset();
       setService("");
       started.current = Date.now();
+      submission.current = newSubmissionId();
     } catch (e) {
       setState("error");
       setMessage(

@@ -48,7 +48,7 @@ test("private routes send noindex headers", async () => {
 
 test("robots.txt blocks everything until indexing is approved, then the CMS", async () => {
   const { default: robots } = await import("../app/robots.ts");
-  if (process.env.NEXT_PUBLIC_INDEXABLE !== "true")
+  if ((process.env.SITE_INDEXABLE ?? process.env.NEXT_PUBLIC_INDEXABLE) !== "true")
     assert.deepEqual(robots().rules, { userAgent: "*", disallow: "/" });
   const source = await readFile("app/robots.ts", "utf8");
   assert.match(source, /disallow: \["\/admin", "\/cms-api"\]/);
