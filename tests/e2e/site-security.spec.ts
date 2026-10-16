@@ -126,12 +126,17 @@ test("the SMTP password is write-only and kept when the field is left empty", as
 });
 
 test("internal hosts and non-SMTP ports are refused without connecting", async () => {
-  for (const host of ["127.0.0.1", "localhost", "db", "10.0.0.5", "169.254.169.254", "172.17.0.1", "[::1]", "mail.internal"]) {
+  // Save rejects every private host. Exercise a few test-connection calls
+  // separately: that endpoint deliberately limits connection attempts per admin.
+  const blockedHosts = ["127.0.0.1", "localhost", "db", "10.0.0.5", "169.254.169.254", "172.17.0.1", "[::1]", "mail.internal"];
+  for (const [index, host] of blockedHosts.entries()) {
     const saved = await adminApi.post(smtp, { data: { host, port: 587, security: "starttls", username: "u@deltawave.test", password: "x" } });
     expect(saved.status(), host).toBe(400);
-    const tested = await adminApi.post(`${smtp}/test`, { data: { host, port: 587, security: "starttls", username: "u@deltawave.test", password: "x" } });
-    expect(tested.status(), host).toBe(400);
-    expect((await tested.json()).errors?.host, host).toBeTruthy();
+    if (index < 3) {
+      const tested = await adminApi.post(`${smtp}/test`, { data: { host, port: 587, security: "starttls", username: "u@deltawave.test", password: "x" } });
+      expect(tested.status(), host).toBe(400);
+      expect((await tested.json()).errors?.host, host).toBeTruthy();
+    }
   }
   const port = await adminApi.post(smtp, { data: { host: "smtp.deltawave.invalid", port: 5432, security: "starttls", username: "u@deltawave.test", password: "x" } });
   expect(port.status()).toBe(400);
