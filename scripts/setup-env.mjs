@@ -12,10 +12,12 @@ const template = readFileSync(new URL("../.env.example", import.meta.url), "utf8
 // Hex keeps the password safe inside DATABASE_URL without URL encoding.
 const databasePassword = randomBytes(24).toString("hex");
 const payloadSecret = randomBytes(32).toString("hex");
+const credentialsKey = randomBytes(32).toString("hex");
 const env = template
   .replaceAll("replace-with-a-long-random-value", databasePassword)
-  .replace("replace-with-at-least-32-random-characters", payloadSecret);
+  .replace("replace-with-at-least-32-random-characters", payloadSecret)
+  .replace("replace-with-64-hex-characters", credentialsKey);
 writeFileSync(target, env, { flag: "wx" });
 console.log(
-  "Created .env with a generated local database password and Payload secret.",
+  "Created .env with a generated local database password, Payload secret and credentials key.",
 );

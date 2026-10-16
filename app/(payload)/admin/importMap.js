@@ -12,7 +12,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { AdminPublishButton as AdminPublishButton_85567be6dc74de15ecf1b2d0044e64fe } from '../../../components/cms/admin-publish-button'
-import { MailStatus as MailStatus_ed2636d84ff1191d5531580ccd331779 } from '../../../components/cms/mail-status'
+import { SmtpSettings as SmtpSettings_f202e92401eac043fc35b5ce2efd6b4a } from '../../../components/cms/smtp-settings'
 import { AdminIcon as AdminIcon_755e34b4ff502d9157eea6eb5f148a5c } from '../../../components/cms/admin-icon'
 import { AdminLogo as AdminLogo_f4484d451e000dca12c735ee38cba791 } from '../../../components/cms/admin-logo'
 import { SidebarUtilities as SidebarUtilities_32b49dd254f27c2f55e23b69cdcf07e9 } from '../../../components/cms/sidebar-utilities'
@@ -38,7 +38,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#HeadingFeatureClient": HeadingFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/cms/admin-publish-button#AdminPublishButton": AdminPublishButton_85567be6dc74de15ecf1b2d0044e64fe,
-  "/components/cms/mail-status#MailStatus": MailStatus_ed2636d84ff1191d5531580ccd331779,
+  "/components/cms/smtp-settings#SmtpSettings": SmtpSettings_f202e92401eac043fc35b5ce2efd6b4a,
   "/components/cms/admin-icon#AdminIcon": AdminIcon_755e34b4ff502d9157eea6eb5f148a5c,
   "/components/cms/admin-logo#AdminLogo": AdminLogo_f4484d451e000dca12c735ee38cba791,
   "/components/cms/sidebar-utilities#SidebarUtilities": SidebarUtilities_32b49dd254f27c2f55e23b69cdcf07e9,

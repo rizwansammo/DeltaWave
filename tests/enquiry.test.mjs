@@ -7,7 +7,7 @@ import {
   clientIp,
 } from "../lib/enquiry.ts";
 import { notificationMessage, submissionKey } from "../lib/cms/enquiries.ts";
-import { headerSafe, isAllowedSender, mailConfigured, smtpSettings } from "../lib/mail.ts";
+import { headerSafe } from "../lib/mail.ts";
 
 const data = () => ({
   name: "Test Enquiry",
@@ -34,6 +34,7 @@ function harness({ store, notify } = {}) {
       expectedUrl: "https://example.com",
       production: true,
       accepting: true,
+      mailReady: true,
       contactEmail: "hello@example.com",
       store: async (enquiry) => {
         calls.push("store");
@@ -86,7 +87,7 @@ test("a malformed submission ID is rejected", () =>
   assert.ok(validateEnquiry({ ...data(), submissionId: "<script>" }).errors.form));
 
 test("closed or unconfigured enquiries fail closed and store nothing", async () => {
-  for (const change of [{ accepting: false }, { turnstileSecret: undefined }, { siteKey: "" }]) {
+  for (const change of [{ accepting: false }, { mailReady: false }, { turnstileSecret: undefined }, { siteKey: "" }]) {
     const { calls, config } = harness();
     const r = await handleEnquiry(request(), { ...config, ...change }, never);
     assert.equal(r.status, 503, JSON.stringify(change));
@@ -211,21 +212,6 @@ test("notifications escape the visitor's text and keep headers single-line", () 
   assert.match(message.text, /Project description:\n<script>alert\(1\)<\/script> & more/);
   assert.equal(headerSafe("A\r\nB"), "A B");
 });
-test("only approved sender domains may send; SMTP needs host, user and password", () => {
-  assert.equal(isAllowedSender("website@deltawave.tech", {}), true);
-  assert.equal(isAllowedSender("website@attacker.example", {}), false);
-  assert.equal(isAllowedSender("x@other.test", { MAIL_ALLOWED_SENDER_DOMAINS: "other.test" }), true);
-  assert.equal(mailConfigured({ SMTP_HOST: "mx.example", SMTP_USER: "u" }), false);
-  assert.deepEqual(smtpSettings({ SMTP_HOST: "mx.example", SMTP_USER: "u", SMTP_PASS: "p" }), {
-    host: "mx.example",
-    port: 587,
-    secure: false,
-    user: "u",
-    pass: "p",
-  });
-  assert.equal(smtpSettings({ SMTP_HOST: "h", SMTP_USER: "u", SMTP_PASS: "p", SMTP_PORT: "465" }).secure, true);
-});
-
 test("the client address comes from the proxy, never from client-chosen headers", () => {
   const r = new Request("https://example.com/", {
     headers: { "cf-connecting-ip": "1.1.1.1", "x-forwarded-for": "2.2.2.2" },

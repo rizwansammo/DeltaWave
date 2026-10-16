@@ -100,6 +100,8 @@ test.describe("navigation behaviour", () => {
   test("desktop mega menus open, close with Escape and return focus", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
+    // Interact only after the server-rendered navigation has hydrated on CI.
+    await settle(page);
     for (const menu of ["Services", "Solutions"]) {
       const toggle = page.locator(`button[aria-controls="mega-${menu}"]`);
       await toggle.click();

@@ -132,14 +132,22 @@ test("enquiry routing settings are readable and writable by administrators only"
     assert.equal(f.access.update({ req: req(editor) }), false, `${f.name} not editable by editors`);
     assert.equal(f.access.update({ req: req(admin) }), true);
   }
+  const validationReq = { payload: { collections: {}, config: { collections: [] } }, t: (key) => key };
   const sender = guarded.find((f) => f.name === "senderEmail");
-  assert.equal(sender.validate("website@deltawave.tech"), true);
-  assert.notEqual(sender.validate("website@attacker.example"), true);
+  assert.equal(sender.validate("website@deltawave.tech", { req: validationReq }), true);
+  assert.equal(sender.validate("", { req: validationReq }), true);
+  assert.notEqual(sender.validate("not an address", { req: validationReq }), true);
+
+  // Switching enquiries on is checked against the real prerequisites; while
+  // they are missing it cannot be published.
+  const accept = guarded.find((f) => f.name === "acceptOnline");
+  const empty = { findGlobal: async () => ({}), find: async () => ({ docs: [] }) };
+  assert.equal(await accept.validate(false, { req: { payload: empty } }), true);
+  assert.match(await accept.validate(true, { req: { payload: empty } }), /cannot be switched on yet/);
 
   // A receiver is required only once enquiries are accepted and emailed, so
   // the rest of Site settings can be published before email is set up.
   const recipient = guarded.find((f) => f.name === "recipient");
-  const validationReq = { payload: { collections: {}, config: { collections: [] } }, t: (key) => key };
   const check = (value, siblingData) => recipient.validate(value, { siblingData, required: false, req: validationReq });
   assert.equal(check(undefined, { acceptOnline: false, notify: true }), true);
   assert.equal(check(undefined, { acceptOnline: true, notify: false }), true);

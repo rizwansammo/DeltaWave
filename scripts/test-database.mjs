@@ -18,4 +18,11 @@ export function testDatabaseUrl() {
 }
 
 /** Environment for anything that talks to the test database. */
-export const testEnvironment = () => ({ DATABASE_URL: testDatabaseUrl(), MEDIA_DIR: testMediaDir });
+/** A fixed key for the disposable test database only; never used elsewhere. */
+export const testCredentialsKey = "7e57".repeat(16);
+
+export const testEnvironment = () => ({
+  DATABASE_URL: testDatabaseUrl(),
+  MEDIA_DIR: testMediaDir,
+  CREDENTIALS_ENCRYPTION_KEY: testCredentialsKey,
+});
