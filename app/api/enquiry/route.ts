@@ -1,6 +1,6 @@
 import { configured, handleEnquiry, type EnquiryConfig } from "@/lib/enquiry";
 import { getServiceOptions } from "@/lib/cms/contact";
-import { getEnquiryRouting, notifyEnquiry, storeEnquiry } from "@/lib/cms/enquiries";
+import { emailReady, getEnquiryRouting, notifyEnquiry, storeEnquiry } from "@/lib/cms/enquiries";
 import { getSiteSettings } from "@/lib/cms/pages";
 import { site } from "@/lib/site";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,8 @@ function environment(): Pick<EnquiryConfig, "turnstileSecret" | "siteKey" | "exp
 const routing = () => getEnquiryRouting().catch(() => null);
 
 export async function GET() {
-  const c = { ...environment(), accepting: (await routing())?.accepting ?? false, store: storeEnquiry };
+  const [route, mailReady] = await Promise.all([routing(), emailReady()]);
+  const c = { ...environment(), accepting: route?.accepting ?? false, mailReady, store: storeEnquiry };
   return Response.json(
     { enabled: configured(c), siteKey: configured(c) ? c.siteKey : undefined },
     {
@@ -35,15 +36,17 @@ export async function GET() {
 export async function POST(request: Request) {
   // The accepted services follow the published categories, so the form and
   // the server agree on what may be submitted.
-  const [{ settings }, allowedServices, route] = await Promise.all([
+  const [{ settings }, allowedServices, route, mailReady] = await Promise.all([
     getSiteSettings(),
     getServiceOptions(),
     routing(),
+    emailReady(),
   ]);
   return handleEnquiry(request, {
     ...environment(),
     allowedServices,
     accepting: route?.accepting ?? false,
+    mailReady,
     contactEmail: settings.email || site.email,
     store: storeEnquiry,
     notify: (id, enquiry) => notifyEnquiry(id, enquiry, route ?? undefined),

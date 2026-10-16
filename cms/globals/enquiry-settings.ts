@@ -1,13 +1,14 @@
-import type { EmailFieldValidation, Endpoint, Field, Tab } from "payload";
+import type { CheckboxFieldValidation, EmailFieldValidation, Field, Tab } from "payload";
 import { email } from "payload/shared";
-import { adminOnlyField, isAdmin } from "../access";
-import { allowedSenderDomains, headerSafe, isAllowedSender, mailConfigured } from "../../lib/mail";
+import { adminOnlyField } from "../access";
+import { enquiryPrerequisites } from "../../lib/cms/enquiry-readiness";
 
 // The "Email & enquiries" tab of Site settings. Routing business enquiries is
 // an administrator decision: every field is readable and writable by
 // administrators only, so editors cannot redirect enquiries and anonymous API
-// reads never see the addresses. SMTP credentials are environment variables
-// and never appear here.
+// reads never see the addresses. The SMTP connection at the top is stored
+// separately (cms/globals/SmtpSettings.ts), applies as soon as it is saved
+// and keeps its password encrypted and write-only.
 
 const adminOnly = { read: adminOnlyField, update: adminOnlyField };
 
@@ -16,9 +17,9 @@ const noLineBreaks = (value: unknown) =>
 
 const fields: Field[] = [
   {
-    name: "mailStatus",
+    name: "smtp",
     type: "ui",
-    admin: { components: { Field: "/components/cms/mail-status#MailStatus" } },
+    admin: { components: { Field: "/components/cms/smtp-settings#SmtpSettings" } },
   },
   {
     name: "acceptOnline",
@@ -26,9 +27,16 @@ const fields: Field[] = [
     type: "checkbox",
     defaultValue: false,
     access: adminOnly,
+    // Checked when publishing: the form only opens once email, spam
+    // protection and an accurate privacy notice are all in place.
+    validate: (async (value, { req }) => {
+      if (!value) return true;
+      const missing = await enquiryPrerequisites(req.payload);
+      return missing.length === 0 || `Online enquiries cannot be switched on yet: ${missing.join("; ")}.`;
+    }) satisfies CheckboxFieldValidation,
     admin: {
       description:
-        "Turns on the contact form. It also needs the Cloudflare Turnstile keys on the server. Publish an accurate privacy notice first: enquiries are stored in this CMS.",
+        "Turns on the contact form. Publishing it requires a working SMTP server above, the Cloudflare Turnstile keys on the server, and a published privacy notice that describes stored enquiries with a confirmed retention period.",
     },
   },
   {
@@ -53,11 +61,11 @@ const fields: Field[] = [
     label: "Sender email (from address)",
     type: "email",
     access: adminOnly,
-    validate: (value: string | null | undefined) =>
-      !value ||
-      isAllowedSender(value) ||
-      `Use an address the mail server may send for: ${allowedSenderDomains().join(", ")}.`,
-    admin: { description: "Leave empty to use the server's default sender." },
+    validate: ((value, args) => !value || email(value, args)) satisfies EmailFieldValidation,
+    admin: {
+      description:
+        "The From address of every email the website sends. Leave empty to use the SMTP username. The SMTP account must be allowed to send as this address.",
+    },
   },
   {
     name: "recipient",
@@ -108,48 +116,6 @@ export const enquirySettingsTab: Tab = {
   name: "enquiries",
   label: "Email & enquiries",
   description:
-    "Who receives website enquiries and how they are notified. Administrators only. Changes apply once published.",
+    "The mail server, and who receives website enquiries. Administrators only. The SMTP server applies when saved; the settings below apply once published.",
   fields,
-};
-
-const lastTest = new Map<string, number>();
-
-/**
- * POST /cms-api/globals/site-settings/test-email: sends one fixed message to
- * the published primary receiver. Administrators only, once a minute, and
- * never to an address supplied in the request.
- */
-export const testEmailEndpoint: Endpoint = {
-  path: "/test-email",
-  method: "post",
-  handler: async (req) => {
-    if (!isAdmin(req.user)) return Response.json({ message: "Administrators only." }, { status: 403 });
-    if (!mailConfigured())
-      return Response.json({ message: "Email is not configured on the server." }, { status: 409 });
-    const key = String(req.user!.id);
-    const now = Date.now();
-    if (now - (lastTest.get(key) ?? 0) < 60_000)
-      return Response.json({ message: "Please wait a minute before sending another test." }, { status: 429 });
-    lastTest.set(key, now);
-    const settings = await req.payload.findGlobal({
-      slug: "site-settings",
-      depth: 0,
-      draft: false,
-      overrideAccess: true,
-    });
-    const to = settings.enquiries?.recipient;
-    if (!to) return Response.json({ message: "Publish a primary enquiry receiver first." }, { status: 409 });
-    const from = settings.enquiries?.senderEmail;
-    try {
-      await req.payload.sendEmail({
-        to,
-        ...(from ? { from: { address: from, name: headerSafe(settings.enquiries?.senderName || "") } } : {}),
-        subject: "DeltaWave website: test email",
-        text: "This is a test from the DeltaWave CMS. Enquiry notifications will arrive at this address.",
-      });
-      return Response.json({ message: `The mail server accepted a test message for ${to}.` });
-    } catch {
-      return Response.json({ message: "The mail server did not accept the test message." }, { status: 502 });
-    }
-  },
 };

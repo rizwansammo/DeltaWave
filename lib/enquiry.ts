@@ -93,6 +93,8 @@ export type EnquiryConfig = {
   allowedServices?: string[];
   /** Administrators accept online enquiries (Site settings → Email & enquiries). */
   accepting?: boolean;
+  /** The CMS SMTP server is configured, so the team can be notified. */
+  mailReady?: boolean;
   /** Shown to visitors when online enquiries are unavailable. */
   contactEmail?: string;
   /** Saves the enquiry. Required: nothing is sent unless it was stored. */
@@ -102,12 +104,12 @@ export type EnquiryConfig = {
 };
 
 /**
- * Online enquiries need the spam check and somewhere to store them, and an
- * administrator must have switched them on. Email is not required: an
- * enquiry is saved even while notifications cannot be sent.
+ * Online enquiries need the spam check, somewhere to store them and a
+ * configured mail server, and an administrator must have switched them on.
+ * An accepted enquiry is still saved if a particular email later fails.
  */
 export function configured(c: EnquiryConfig) {
-  return !!(c.turnstileSecret && c.siteKey && c.accepting && c.store);
+  return !!(c.turnstileSecret && c.siteKey && c.accepting && c.mailReady && c.store);
 }
 const limits = new Map<string, { count: number; reset: number }>();
 export function checkRateLimit(key: string, now = Date.now()) {

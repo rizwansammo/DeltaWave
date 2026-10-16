@@ -103,11 +103,13 @@ export interface Config {
     homepage: Homepage;
     'page-content': PageContent;
     'site-settings': SiteSetting;
+    'smtp-settings': SmtpSetting;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     'page-content': PageContentSelect<false> | PageContentSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'smtp-settings': SmtpSettingsSelect<false> | SmtpSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1697,7 +1699,7 @@ export interface SiteSetting {
   };
   enquiries?: {
     /**
-     * Turns on the contact form. It also needs the Cloudflare Turnstile keys on the server. Publish an accurate privacy notice first: enquiries are stored in this CMS.
+     * Turns on the contact form. Publishing it requires a working SMTP server above, the Cloudflare Turnstile keys on the server, and a published privacy notice that describes stored enquiries with a confirmed retention period.
      */
     acceptOnline?: boolean | null;
     /**
@@ -1706,7 +1708,7 @@ export interface SiteSetting {
     notify?: boolean | null;
     senderName?: string | null;
     /**
-     * Leave empty to use the server's default sender.
+     * The From address of every email the website sends. Leave empty to use the SMTP username. The SMTP account must be allowed to send as this address.
      */
     senderEmail?: string | null;
     /**
@@ -1727,6 +1729,27 @@ export interface SiteSetting {
   };
   updatedBy?: (number | null) | User;
   _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "smtp-settings".
+ */
+export interface SmtpSetting {
+  id: number;
+  host?: string | null;
+  port?: ('587' | '465' | '25' | '2525') | null;
+  security?: ('starttls' | 'tls') | null;
+  username?: string | null;
+  passwordEncrypted?: string | null;
+  passwordUpdatedAt?: string | null;
+  updatedBy?: string | null;
+  lastTest?: {
+    at?: string | null;
+    ok?: boolean | null;
+    message?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2248,6 +2271,29 @@ export interface SiteSettingsSelect<T extends boolean = true> {
       };
   updatedBy?: T;
   _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "smtp-settings_select".
+ */
+export interface SmtpSettingsSelect<T extends boolean = true> {
+  host?: T;
+  port?: T;
+  security?: T;
+  username?: T;
+  passwordEncrypted?: T;
+  passwordUpdatedAt?: T;
+  updatedBy?: T;
+  lastTest?:
+    | T
+    | {
+        at?: T;
+        ok?: T;
+        message?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

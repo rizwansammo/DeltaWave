@@ -2,7 +2,7 @@ import config from "@payload-config";
 import { createHash } from "node:crypto";
 import { getPayload } from "payload";
 import type { Enquiry } from "@/lib/enquiry";
-import { headerSafe, isAllowedSender, mailConfigured } from "@/lib/mail";
+import { headerSafe, smtpReady, type SendResult } from "@/lib/mail";
 
 // Stores accepted website enquiries and emails the notification. Called only
 // by the enquiry route after validation, rate limiting and Turnstile; it is
@@ -36,7 +36,7 @@ export async function getEnquiryRouting(): Promise<EnquiryRouting> {
     accepting: e.acceptOnline === true,
     notify: e.notify !== false,
     senderName: headerSafe(e.senderName || "DeltaWave Technology Website"),
-    senderEmail: e.senderEmail && isAllowedSender(e.senderEmail) ? e.senderEmail : "",
+    senderEmail: e.senderEmail?.trim() || "",
     recipients: [...new Set(recipients)],
     replyToVisitor: e.replyToVisitor !== false,
     subjectPrefix: headerSafe(e.subjectPrefix || "Website enquiry"),
@@ -134,6 +134,15 @@ export function notificationMessage(enquiry: Enquiry, routing: EnquiryRouting) {
   };
 }
 
+/** Whether email can be sent; the form stays closed until it can. Fails closed. */
+export async function emailReady() {
+  try {
+    return await smtpReady(await getPayload({ config }));
+  } catch {
+    return false;
+  }
+}
+
 /** Emails the notification and records the outcome on the enquiry. */
 export async function notifyEnquiry(id: number | string, enquiry: Enquiry, routing?: EnquiryRouting) {
   const payload = await getPayload({ config });
@@ -149,8 +158,8 @@ export async function notifyEnquiry(id: number | string, enquiry: Enquiry, routi
     await record("Failed", "Not emailed: notifications are switched off in Site settings.");
     return false;
   }
-  if (!mailConfigured()) {
-    await record("Failed", "Not emailed: the mail server is not configured.");
+  if (!(await smtpReady(payload))) {
+    await record("Failed", "Not emailed: the SMTP server is not configured in Site settings → Email & enquiries.");
     return false;
   }
   if (route.recipients.length === 0) {
@@ -164,9 +173,9 @@ export async function notifyEnquiry(id: number | string, enquiry: Enquiry, routi
       ...(route.senderEmail ? { from: { address: route.senderEmail, name: route.senderName } } : {}),
       ...(route.replyToVisitor ? { replyTo: enquiry.email } : {}),
       ...message,
-    })) as { accepted?: unknown[] } | undefined;
+    })) as SendResult | undefined;
     if (!info?.accepted?.length) {
-      await record("Failed", "The mail server did not accept any receiver.");
+      await record("Failed", `Not emailed: ${info?.error ?? "the mail server did not accept any receiver."}`.slice(0, 400));
       return false;
     }
     await record("Sent", "Accepted by the mail server (inbox delivery is not guaranteed).");
