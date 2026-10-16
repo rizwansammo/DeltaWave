@@ -8,7 +8,9 @@ DeltaWave Technology runs as **one Next.js application** that serves the public 
 | --- | --- | --- |
 | `/` | `app/(frontend)/page.tsx` | Rendered on every request from the published Homepage global (Phase 2A). See "Homepage content" below. |
 | `/services`, `/solutions`, `/portfolio` and their 35 detail pages | `app/(frontend)/[...slug]` | Rendered on every request from the published CMS records (Phase 2B), through `lib/cms/catalog.ts`. Unknown or unpublished slugs are real 404s; a newly published record is reachable at once. |
-| About, Academy, Contact, Privacy | `app/(frontend)/[...slug]` | Still from code (Phase 2C/2D), rendered on request with the shared layout. |
+| `/about`, `/academy`, `/contact` | `app/(frontend)/[...slug]` | Rendered on request from the **Page content** global (Phase 2C). |
+| `/privacy` and any other standalone page | `app/(frontend)/[...slug]` | Rendered on request from a published **Pages** record; unpublished or missing is a real 404. |
+| `/api/preview`, `/api/preview/exit` | `app/api/preview` | Staff draft preview: checks the CMS session, then turns Next.js draft mode on or off. |
 | Unknown paths | `app/(frontend)/[...slug]` → `not-found.tsx` | Real HTTP 404 with the branded page in production builds. |
 | `/admin`, `/admin/*` | `app/(payload)/admin/[[...segments]]` | Payload admin panel. Sends `X-Robots-Tag: noindex, nofollow`. |
 | `/cms-api/*` | `app/(payload)/cms-api/[...slug]/route.ts` | Payload REST API (`config.routes.api`). Sends `X-Robots-Tag`. |
@@ -81,6 +83,12 @@ Any other error (access, validation, programming) is thrown rather than hidden b
 There is no fallback content for these pages. If the database cannot be reached the error is logged and the branded error page is shown, and the header keeps only its plain links (`getNavigationMenu` returns null). The approved catalog (`lib/cms/catalog-approved.ts`) is used only by the seed and the markup tests.
 
 The sitemap (`app/sitemap.ts`, dynamic) lists the fixed pages plus every published record without **Hide from search engines**. Such records also get `noindex` metadata.
+
+## Editorial pages, settings and draft preview
+
+`lib/cms/pages.ts` reads the **Site settings** and **Page content** globals and the standalone **Pages**, as an anonymous visitor or, while previewing, as the signed-in member of staff. React's `cache` keeps it to one read per request. Site settings fall back to the approved values when the global has never been saved or the database is unreachable (both logged), so the header, footer and error page always render; the page bodies have no fallback once published.
+
+**Draft preview (Phase 2D).** `/api/preview` verifies the CMS session with `payload.auth` and refuses anyone who is not staff, then enables Next.js draft mode. `lib/cms/preview.ts` re-checks that account on every page render, so draft content needs **both** the draft-mode cookie and a staff session; the reads then run as that account with `overrideAccess: false`. Preview paths must be a page on this site (`lib/preview-path.ts`), responses carrying the draft cookie are `noindex` and `no-store` (one rule in `next.config.ts`), and a bar on the page links to `/api/preview/exit`. Payload's Live Preview points at the same route and refreshes the page when a document is saved.
 
 ## Media storage
 

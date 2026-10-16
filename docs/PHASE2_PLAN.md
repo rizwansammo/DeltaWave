@@ -22,7 +22,18 @@ not duplicate the sidebar redesign.
 - Every public page is rendered on request, so a published change appears on the next load and a newly published record is reachable at once.
 - `pnpm seed` (content, then homepage) imports the approved records once, in a transaction, without overwriting anything a person has edited.
 
-The items below are marked where 2A or 2B covered them. Everything not marked is still open.
+**Phase 2C + 2D, the remaining pages, site settings and draft preview, are complete** (`docs/PHASE2CD_REPORT.md`):
+
+- About, Academy, Contact and the three directory introductions render from a single **Page content** global; the privacy notice is a record in **Pages**, edited as rich text.
+- **Site settings** drive the header call to action, the footer, the contact details, the default search wording and the organization data.
+- Staff preview drafts securely in the real design, and Payload's Live Preview is configured at 1440 and 390 px.
+
+**Phase 2 is therefore complete for everything that can be built and verified locally.** The agreed division is:
+
+- **Phase 2:** content management, editorial control, publishing workflow, secure drafts and previews, media management.
+- **Phase 3:** production storage (R2), hosting, email delivery, DNS, security hardening, backups and deployment.
+
+The items below are marked where 2A, 2B or 2C/2D covered them. Everything not marked is Phase 3.
 
 Carried over from 2A:
 
@@ -34,7 +45,8 @@ Carried over from 2A:
 
 ### 1. Seed the CMS from the current content
 - *2A:* `pnpm seed:homepage` seeds the homepage, its five photographs, the four service categories, the six featured solutions and the two portfolio entries. It does nothing once the Homepage global has been saved.
-- *2B:* `pnpm seed:content` imports all 4 categories, 18 services, 15 solutions and 2 portfolio entries with every relationship, and `pnpm seed` runs both seeds. Still open: site settings and the privacy notice (Phase 2C/2D).
+- *2C:* `pnpm seed:pages` publishes the site settings, the page content and the privacy notice.
+- *2B:* `pnpm seed:content` imports all 4 categories, 18 services, 15 solutions and 2 portfolio entries with every relationship, and `pnpm seed` runs it with the others.
 - An idempotent `pnpm seed` script (Payload Local API) that imports `lib/content.ts`, `lib/site.ts`, the homepage copy from `components/site/pages.tsx`, the privacy notice (as rich text) and the six photographs with their credits from `docs/IMAGE_CREDITS.md`.
 - Everything is created as **published** by an administrator account, so the live site is unchanged.
 - Tests compare seeded counts and relationships with the existing content tests (18 services, 15 solutions, 2 projects, relationships resolve).
@@ -46,20 +58,20 @@ Carried over from 2A:
 - Decide how `generateStaticParams` and `dynamicParams` behave once slugs come from the CMS, and keep real 404s. *2B decided:* the frontend layout is `force-dynamic` and there is no static slug list, so new records need no build. Unknown or unpublished slugs are real 404s. Cache tags remain an option if traffic needs them.
 
 ### 3. Switch the frontend over, one area at a time
-1. Site settings → header call to action, footer, contact details, JSON-LD.
+1. Site settings → header call to action, footer, contact details, JSON-LD. *Done in 2C.*
 2. Service, solution and portfolio detail pages. *Done in 2B.*
 3. Services, Solutions and Portfolio listings, mega menus and the mobile menu. *Done in 2B.*
 4. Homepage from the Homepage global (section visibility and featured items). *Done in 2A.*
-5. Privacy page from `pages`.
+5. Privacy page from `pages`. *Done in 2C.*
 
 Run unit, render, HTML and parity tests after each area.
 
 ### 4. Structured globals for the remaining pages
-Model the About, Services, Solutions, Portfolio, Academy and Contact page copy (currently JSX) as structured globals like the homepage, then switch those pages over.
+*Done in 2C:* one **Page content** global with a tab per page (About, Academy, Contact and the three directory introductions), plus the privacy notice in **Pages**.
 
 ### 5. Homepage editor and previews
-- Next.js draft mode and Payload preview URLs, so staff can see drafts in the real design before publishing.
-- Live preview (`admin.livePreview`) for the homepage and detail pages at desktop and mobile widths.
+- *Done in 2D:* Next.js draft mode behind a CMS session check, with Payload preview URLs, for every page type.
+- *Done in 2D:* live preview (`admin.livePreview`) at 1440 and 390 px, refreshing on save.
 - Editor help: field descriptions written for DeltaWave's content, image focal points, character counts. *2A wrote the Homepage descriptions.*
 
 ### 6. Publishing workflow

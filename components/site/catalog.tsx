@@ -1,4 +1,5 @@
 import type { Catalog, SeoView } from "@/lib/cms/catalog-view";
+import type { PageContentView } from "@/lib/cms/pages-view";
 import {
   PortfolioPage,
   ProjectPage,
@@ -36,11 +37,13 @@ function detail(slug: string[], catalog: Catalog) {
 }
 
 /** The page for a catalog address, or null when there is none. */
-export function renderCatalogRoute(slug: string[], catalog: Catalog) {
+export function renderCatalogRoute(slug: string[], catalog: Catalog, content: PageContentView) {
   if (slug.length === 1) {
-    if (slug[0] === "services") return <ServicesPage catalog={catalog} />;
-    if (slug[0] === "solutions") return <SolutionsPage solutions={catalog.solutions} />;
-    if (slug[0] === "portfolio") return <PortfolioPage projects={catalog.projects} />;
+    if (slug[0] === "services") return <ServicesPage catalog={catalog} content={content.services} />;
+    if (slug[0] === "solutions")
+      return <SolutionsPage solutions={catalog.solutions} content={content.solutions} />;
+    if (slug[0] === "portfolio")
+      return <PortfolioPage projects={catalog.projects} content={content.portfolio} />;
     return null;
   }
   return detail(slug, catalog)?.page ?? null;

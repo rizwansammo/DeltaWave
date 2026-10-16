@@ -3,7 +3,11 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Navigation } from "@/components/site/navigation";
 import { Footer } from "@/components/site/shared";
+import { LivePreviewRefresh } from "@/components/site/live-preview-refresh";
+import { PreviewBar } from "@/components/site/preview-bar";
 import { getNavigationMenu } from "@/lib/cms/catalog";
+import { getSiteSettings } from "@/lib/cms/pages";
+import { getViewer } from "@/lib/cms/preview";
 import { site } from "@/lib/site";
 
 // Every public page is rendered on request: the header menus, /services,
@@ -11,14 +15,16 @@ import { site } from "@/lib/site";
 // publish in /admin appears on the next page load without a rebuild.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const { settings } = await getSiteSettings();
+  const name = settings.siteName || site.name;
+  return {
   metadataBase: new URL(site.url),
   title: {
-    default: "DeltaWave Technology",
-    template: "%s | DeltaWave Technology",
+    default: name,
+    template: `%s | ${name}`,
   },
-  description:
-    "Thoughtful software engineering and practical business technology.",
+  description: settings.seo.description || settings.tagline,
   icons: {
     icon: [
       {
@@ -36,26 +42,40 @@ export const metadata: Metadata = {
     apple: "/brand/deltawave_corporate_blue_256px.png",
   },
   robots: { index: site.indexable, follow: site.indexable },
-};
+  };
+}
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [{ settings }, menu, viewer] = await Promise.all([
+    getSiteSettings(),
+    getNavigationMenu(),
+    getViewer(),
+  ]);
+  const address = settings.postalAddress;
   const schema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: site.name,
+    name: settings.siteName || site.name,
     url: site.url,
-    email: site.email,
-    telephone: site.phone,
+    ...(settings.email ? { email: settings.email } : {}),
+    ...(settings.phone ? { telephone: settings.phone } : {}),
     logo: site.url + "/brand/deltawave_corporate_blue_512px.png",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Ward 7, Tobgi Union",
-      addressLocality: "Borhanuddin, Bhola",
-      addressCountry: "BD",
-    },
+    ...(settings.social.length > 0 ? { sameAs: settings.social.map((s) => s.url) } : {}),
+    ...(address.street || address.locality
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            ...(address.street ? { streetAddress: address.street } : {}),
+            ...(address.locality ? { addressLocality: address.locality } : {}),
+            ...(address.region ? { addressRegion: address.region } : {}),
+            ...(address.postalCode ? { postalCode: address.postalCode } : {}),
+            ...(address.country ? { addressCountry: address.country } : {}),
+          },
+        }
+      : {}),
   };
   return (
     <html lang="en">
@@ -79,9 +99,15 @@ export default async function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <Navigation menu={await getNavigationMenu()} />
+        <Navigation menu={menu} settings={settings} />
         <main id="main-content">{children}</main>
-        <Footer />
+        <Footer settings={settings} />
+        {viewer.draft && (
+          <>
+            <PreviewBar />
+            <LivePreviewRefresh origin={site.url} />
+          </>
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

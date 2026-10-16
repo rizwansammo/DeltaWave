@@ -12,7 +12,11 @@ export function metadataFor(
   path: string,
   title: string,
   description: string,
-  { image, noIndex = false }: { image?: PhotoSource | null; noIndex?: boolean } = {},
+  {
+    image,
+    noIndex = false,
+    siteName = site.name,
+  }: { image?: PhotoSource | null; noIndex?: boolean; siteName?: string } = {},
 ): Metadata {
   const share = image
     ? { url: image.src, width: image.width, height: image.height, alt: image.alt }
@@ -26,8 +30,8 @@ export function metadataFor(
     ...(noIndex ? { robots: { index: false, follow: site.indexable } } : {}),
     openGraph: {
       type: "website",
-      siteName: site.name,
-      title: title + " | " + site.name,
+      siteName,
+      title: title + " | " + siteName,
       description,
       url: site.url + path,
       images: [{ ...share, url: url(share.url) }],

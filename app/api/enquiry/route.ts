@@ -1,4 +1,6 @@
 import { configured, handleEnquiry, type EnquiryConfig } from "@/lib/enquiry";
+import { getServiceOptions } from "@/lib/cms/contact";
+import { getSiteSettings } from "@/lib/cms/pages";
 import { site } from "@/lib/site";
 export const dynamic = "force-dynamic";
 function config(): EnquiryConfig {
@@ -25,5 +27,15 @@ export function GET() {
   );
 }
 export async function POST(request: Request) {
-  return handleEnquiry(request, config());
+  // The accepted services and the delivery inbox follow the published CMS
+  // values, so the form and the server agree on what may be submitted.
+  const [{ settings }, allowedServices] = await Promise.all([
+    getSiteSettings(),
+    getServiceOptions(),
+  ]);
+  return handleEnquiry(request, {
+    ...config(),
+    to: settings.email || site.email,
+    allowedServices,
+  });
 }

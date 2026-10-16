@@ -3,6 +3,7 @@ import { getPayload } from "payload";
 import { cache } from "react";
 import { isDatabaseUnavailable } from "./errors";
 import { catalogMediaIds, navigationMenu, toCatalog, type NavigationMenu } from "./catalog-view";
+import { asViewer, getViewer } from "./preview";
 
 // Server-only reads of the published services, industry solutions and
 // portfolio through Payload's Local API, as an anonymous visitor
@@ -14,11 +15,10 @@ import { catalogMediaIds, navigationMenu, toCatalog, type NavigationMenu } from 
 // is logged and thrown, so pages show the error page; only the header menus
 // are left out instead (getNavigationMenu).
 
-const asVisitor = { overrideAccess: false, draft: false, depth: 0, pagination: false } as const;
-
 export const getCatalog = cache(async () => {
   try {
     const payload = await getPayload({ config });
+    const asVisitor = { ...asViewer(await getViewer()), depth: 0, pagination: false } as const;
     const [categories, services, solutions, projects] = await Promise.all([
       payload.find({ collection: "service-categories", sort: "number", ...asVisitor }),
       payload.find({ collection: "services", sort: "createdAt", ...asVisitor }),

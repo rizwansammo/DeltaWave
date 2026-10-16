@@ -95,7 +95,7 @@ export type HomepageView = {
 type Text = string | null | undefined;
 type LinkInput = { label?: Text; href?: Text } | null | undefined;
 
-const text = (value: Text) => (value ?? "").trim();
+export const text = (value: Text) => (value ?? "").trim();
 
 /** Splits on the line breaks an editor typed. */
 export const toLines = (value: Text) =>

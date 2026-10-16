@@ -2,7 +2,7 @@
 
 Payload 3 is the only content engine. The schema lives in `cms/` and is registered in `payload.config.ts`. Generated types are in `payload-types.ts` (`pnpm generate:types`).
 
-Phase 1 delivered the model, access rules and publishing workflow. Since Phase 2A **the homepage renders from the Homepage global**. Since Phase 2B the **/services, /solutions and /portfolio pages, all their detail pages and the header menus render from the published service categories, services, solutions and portfolio entries** (see `docs/ARCHITECTURE.md`). About, Academy, Contact and Privacy still read code until Phase 2C/2D.
+Phase 1 delivered the model, access rules and publishing workflow. Since Phase 2C **every public page renders from the CMS**: the homepage from the Homepage global, Since Phase 2B the **/services, /solutions and /portfolio pages, all their detail pages and the header menus render from the published service categories, services, solutions and portfolio entries** (see `docs/ARCHITECTURE.md`). About, Academy, Contact and the three directory introductions from the **Page content** global, and the privacy notice from the **Pages** collection.
 
 ## Principles
 
@@ -40,6 +40,12 @@ Reserved page slugs: `admin`, `cms-api`, `api`, `services`, `solutions`, `portfo
 | Social links | `social[]` (platform and `https://` URL, up to 8; official profiles only) |
 | Search defaults | `title`, `description`, `image` |
 | Header & footer | `header.ctaLabel`, `header.ctaHref`, `footer.statement`, `footer.caption`, `footer.closingLink` |
+
+### Page content (`page-content`)
+
+The editorial copy of the pages that are not a record of their own, one tab each: **About**, **Academy**, **Contact**, **Services directory**, **Solutions directory**, **Portfolio directory**. Each tab has a hero, its own sections, a closing call to action where the page has one, and its own *Search & sharing* title and description. Sections below the hero carry a **Show this section** toggle that hides them while keeping their content. Headings are textareas: each line break is a line break on the page.
+
+The Academy tab's help text states that courses, fees, instructors and dates may only be named once they are confirmed. The status label is free text so the real status can be stated honestly.
 
 ### Homepage (`homepage`)
 

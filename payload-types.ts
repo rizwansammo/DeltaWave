@@ -99,10 +99,12 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     homepage: Homepage;
+    'page-content': PageContent;
     'site-settings': SiteSetting;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'page-content': PageContentSelect<false> | PageContentSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
@@ -1140,7 +1142,406 @@ export interface Homepage {
   createdAt?: string | null;
 }
 /**
- * Business identity, contact details, search defaults, header and footer.
+ * Copy and media for the About, Academy and Contact pages and for the three directory introductions. Save a draft to prepare changes privately; visitors see them after an administrator publishes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-content".
+ */
+export interface PageContent {
+  id: number;
+  about: {
+    hero: {
+      label: string;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading: string;
+      description: string;
+    };
+    /**
+     * Wide photograph under the hero. Leave empty for no image.
+     */
+    image?: (number | null) | Media;
+    imageCaption?: string | null;
+    intro?: {
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      lead?: string | null;
+      /**
+       * One paragraph per row, in the order they are shown.
+       */
+      paragraphs?:
+        | {
+            text: string;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    vision?: {
+      label?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      body?: string | null;
+    };
+    mission?: {
+      label?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      body?: string | null;
+    };
+    principles?: {
+      /**
+       * Untick to hide the section on the website. Its content is kept.
+       */
+      enabled?: boolean | null;
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 1 lines. Press Enter to start a new line.
+       */
+      title?: string | null;
+      /**
+       * Numbered 01, 02 and so on in this order.
+       */
+      items?:
+        | {
+            title: string;
+            description: string;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    direction?: {
+      /**
+       * Untick to hide the section on the website. Its content is kept.
+       */
+      enabled?: boolean | null;
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      body?: string | null;
+      /**
+       * Shown only when both the label and the link are filled in.
+       */
+      link?: {
+        label?: string | null;
+        href?: string | null;
+      };
+    };
+    /**
+     * The band at the foot of the page.
+     */
+    cta?: {
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Optional. Preselects this service on the contact form. Use a service category title, Academy interest or Other.
+       */
+      service?: string | null;
+    };
+    /**
+     * How the page appears in search results and shared links. Leave empty to use the page's own heading and the site defaults.
+     */
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  academy: {
+    hero: {
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 3 lines. Press Enter to start a new line.
+       */
+      heading: string;
+      /**
+       * Final heading line, shown in green.
+       */
+      headingAccent?: string | null;
+      description: string;
+      /**
+       * State the real status, for example In planning · Enrollment is not open. Do not announce courses, fees, instructors or dates before they are confirmed.
+       */
+      statusLabel?: string | null;
+      /**
+       * Photograph beside the heading. Leave empty for no image.
+       */
+      image?: (number | null) | Media;
+    };
+    intention?: {
+      /**
+       * Untick to hide the section on the website. Its content is kept.
+       */
+      enabled?: boolean | null;
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      /**
+       * One paragraph per row, in the order they are shown.
+       */
+      paragraphs?:
+        | {
+            text: string;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    topics?: {
+      /**
+       * Untick to hide the section on the website. Its content is kept.
+       */
+      enabled?: boolean | null;
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 1 lines. Press Enter to start a new line.
+       */
+      title?: string | null;
+      /**
+       * Numbered 01, 02 and so on in this order.
+       */
+      groups?:
+        | {
+            title: string;
+            items?:
+              | {
+                  item: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    next?: {
+      /**
+       * Untick to hide the section on the website. Its content is kept.
+       */
+      enabled?: boolean | null;
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      body?: string | null;
+      /**
+       * Shown only when both the label and the link are filled in.
+       */
+      link?: {
+        label?: string | null;
+        href?: string | null;
+      };
+    };
+    /**
+     * How the page appears in search results and shared links. Leave empty to use the page's own heading and the site defaults.
+     */
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  contact: {
+    hero: {
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading: string;
+      description: string;
+    };
+    /**
+     * The heading above the contact details and the enquiry form.
+     */
+    section?: {
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      detailsIntro?: string | null;
+      note?: string | null;
+    };
+    next?: {
+      /**
+       * Untick to hide the section on the website. Its content is kept.
+       */
+      enabled?: boolean | null;
+      /**
+       * Small label above the heading. Leave empty for none.
+       */
+      eyebrow?: string | null;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading?: string | null;
+      body?: string | null;
+    };
+    /**
+     * How the page appears in search results and shared links. Leave empty to use the page's own heading and the site defaults.
+     */
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  services: {
+    hero: {
+      label: string;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading: string;
+      description: string;
+    };
+    heroButton?: string | null;
+    /**
+     * The band at the foot of the page.
+     */
+    cta?: {
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Optional. Preselects this service on the contact form. Use a service category title, Academy interest or Other.
+       */
+      service?: string | null;
+    };
+    /**
+     * How the page appears in search results and shared links. Leave empty to use the page's own heading and the site defaults.
+     */
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  solutions: {
+    hero: {
+      label: string;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading: string;
+      description: string;
+    };
+    opening?: {
+      label?: string | null;
+      body?: string | null;
+      /**
+       * Shown only when both the label and the link are filled in.
+       */
+      link?: {
+        label?: string | null;
+        href?: string | null;
+      };
+    };
+    /**
+     * The band at the foot of the page.
+     */
+    cta?: {
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Optional. Preselects this service on the contact form. Use a service category title, Academy interest or Other.
+       */
+      service?: string | null;
+    };
+    /**
+     * How the page appears in search results and shared links. Leave empty to use the page's own heading and the site defaults.
+     */
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  portfolio: {
+    hero: {
+      label: string;
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      heading: string;
+      description: string;
+    };
+    /**
+     * Shown while every published entry is a planned product concept. Keep it factual.
+     */
+    note?: {
+      statusLabel?: string | null;
+      body?: string | null;
+    };
+    /**
+     * The band at the foot of the page.
+     */
+    cta?: {
+      /**
+       * Up to 2 lines. Press Enter to start a new line.
+       */
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Optional. Preselects this service on the contact form. Use a service category title, Academy interest or Other.
+       */
+      service?: string | null;
+    };
+    /**
+     * How the page appears in search results and shared links. Leave empty to use the page's own heading and the site defaults.
+     */
+    seo?: {
+      title?: string | null;
+      description?: string | null;
+    };
+  };
+  updatedBy?: (number | null) | User;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Business identity, contact details, search defaults, header and footer. These values are used across the website, so publish changes carefully.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings".
@@ -1148,14 +1549,45 @@ export interface Homepage {
 export interface SiteSetting {
   id: number;
   identity: {
+    /**
+     * Used in page titles, sharing cards and the footer copyright.
+     */
     siteName: string;
+    /**
+     * One line about the business, used as the default search description.
+     */
     tagline?: string | null;
   };
   contact: {
+    /**
+     * Business inbox shown on the site and used for enquiry delivery.
+     */
     email: string;
     phone?: string | null;
+    /**
+     * How the number is written on the page, for example +880 1821 777620.
+     */
     phoneDisplay?: string | null;
+    /**
+     * The address shown in the footer and on the contact page.
+     */
     location?: string | null;
+    /**
+     * Used for the search engine business listing (structured data). Leave empty to omit it.
+     */
+    postalAddress?: {
+      street?: string | null;
+      locality?: string | null;
+      region?: string | null;
+      postalCode?: string | null;
+      /**
+       * Two letters, for example BD.
+       */
+      country?: string | null;
+    };
+    /**
+     * Shown on the contact page and linked to the homepage. The real address stays http://localhost:3000.
+     */
     publicWebsite?: string | null;
   };
   /**
@@ -1169,16 +1601,38 @@ export interface SiteSetting {
       }[]
     | null;
   seoDefaults?: {
+    /**
+     * Falls back to the site name.
+     */
     title?: string | null;
+    /**
+     * Falls back to the tagline.
+     */
     description?: string | null;
+    /**
+     * Shown when a page is shared. Falls back to the approved photograph.
+     */
     image?: (number | null) | Media;
   };
   header?: {
+    /**
+     * The button at the right of the header. Hidden if either field is empty.
+     */
     ctaLabel?: string | null;
     ctaHref?: string | null;
   };
   footer?: {
+    /**
+     * Beside the lockup. Press Enter to start a new line.
+     */
     statement?: string | null;
+    /**
+     * Small label above the address, for example Based in Bangladesh.
+     */
+    locationLabel?: string | null;
+    /**
+     * Under the address. Press Enter to start a new line.
+     */
     caption?: string | null;
     closingLink?: {
       label?: string | null;
@@ -1347,6 +1801,288 @@ export interface HomepageSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-content_select".
+ */
+export interface PageContentSelect<T extends boolean = true> {
+  about?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              description?: T;
+            };
+        image?: T;
+        imageCaption?: T;
+        intro?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              lead?: T;
+              paragraphs?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+            };
+        vision?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              body?: T;
+            };
+        mission?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              body?: T;
+            };
+        principles?:
+          | T
+          | {
+              enabled?: T;
+              eyebrow?: T;
+              title?: T;
+              items?:
+                | T
+                | {
+                    title?: T;
+                    description?: T;
+                    id?: T;
+                  };
+            };
+        direction?:
+          | T
+          | {
+              enabled?: T;
+              eyebrow?: T;
+              heading?: T;
+              body?: T;
+              link?:
+                | T
+                | {
+                    label?: T;
+                    href?: T;
+                  };
+            };
+        cta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              service?: T;
+            };
+        seo?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  academy?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              headingAccent?: T;
+              description?: T;
+              statusLabel?: T;
+              image?: T;
+            };
+        intention?:
+          | T
+          | {
+              enabled?: T;
+              eyebrow?: T;
+              heading?: T;
+              paragraphs?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+            };
+        topics?:
+          | T
+          | {
+              enabled?: T;
+              eyebrow?: T;
+              title?: T;
+              groups?:
+                | T
+                | {
+                    title?: T;
+                    items?:
+                      | T
+                      | {
+                          item?: T;
+                          id?: T;
+                        };
+                    id?: T;
+                  };
+            };
+        next?:
+          | T
+          | {
+              enabled?: T;
+              eyebrow?: T;
+              heading?: T;
+              body?: T;
+              link?:
+                | T
+                | {
+                    label?: T;
+                    href?: T;
+                  };
+            };
+        seo?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  contact?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              description?: T;
+            };
+        section?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              detailsIntro?: T;
+              note?: T;
+            };
+        next?:
+          | T
+          | {
+              enabled?: T;
+              eyebrow?: T;
+              heading?: T;
+              body?: T;
+            };
+        seo?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  services?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              description?: T;
+            };
+        heroButton?: T;
+        cta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              service?: T;
+            };
+        seo?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  solutions?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              description?: T;
+            };
+        opening?:
+          | T
+          | {
+              label?: T;
+              body?: T;
+              link?:
+                | T
+                | {
+                    label?: T;
+                    href?: T;
+                  };
+            };
+        cta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              service?: T;
+            };
+        seo?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  portfolio?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              label?: T;
+              heading?: T;
+              description?: T;
+            };
+        note?:
+          | T
+          | {
+              statusLabel?: T;
+              body?: T;
+            };
+        cta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              service?: T;
+            };
+        seo?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+            };
+      };
+  updatedBy?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -1363,6 +2099,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         phone?: T;
         phoneDisplay?: T;
         location?: T;
+        postalAddress?:
+          | T
+          | {
+              street?: T;
+              locality?: T;
+              region?: T;
+              postalCode?: T;
+              country?: T;
+            };
         publicWebsite?: T;
       };
   social?:
@@ -1389,6 +2134,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         statement?: T;
+        locationLabel?: T;
         caption?: T;
         closingLink?:
           | T

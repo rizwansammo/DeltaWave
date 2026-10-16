@@ -1,6 +1,7 @@
 import { ArrowUpRight, ArrowDown, ArrowRight, Check } from "lucide-react";
-import { site } from "@/lib/site";
 import type { HomepageView, LinkView } from "@/lib/cms/homepage-view";
+import type { PageContentView } from "@/lib/cms/pages-view";
+import type { Page } from "@/payload-types";
 import {
   isPlannedConcept,
   type Catalog,
@@ -20,7 +21,8 @@ import {
   ProjectCTA,
   Breadcrumbs,
 } from "./shared";
-import { ContactSection } from "./contact";
+import { ContactSection, type ContactSectionData } from "./contact";
+import { RichText } from "./rich-text";
 import { SolutionsDirectory, ProjectList } from "./directories";
 import { ProjectEntry } from "./project-entry";
 
@@ -40,7 +42,13 @@ const sideContent = (lines: string[], link: LinkView | null) =>
  * The homepage composition. Section order, markup and classes are fixed by the
  * design; the content comes from the Homepage global (lib/cms/homepage.ts).
  */
-export function HomePage({ content }: { content: HomepageView }) {
+export function HomePage({
+  content,
+  contact: contactData,
+}: {
+  content: HomepageView;
+  contact: ContactSectionData;
+}) {
   const {
     hero,
     introduction: intro,
@@ -271,127 +279,107 @@ export function HomePage({ content }: { content: HomepageView }) {
         <ContactSection
           eyebrow={contact.eyebrow}
           heading={<Lines lines={contact.headingLines} />}
+          data={contactData}
         />
       )}
     </>
   );
 }
 
-export function AboutPage() {
+export function AboutPage({ content }: { content: PageContentView["about"] }) {
+  const { hero, intro, vision, mission, principles, direction, cta } = content;
   return (
     <>
       <PageHero
-        label="About DeltaWave"
-        title="A thoughtful approach to moving forward."
-        description="We are building a technology enterprise around a simple idea: software should make real work clearer, more connected and easier to manage."
+        label={hero.label}
+        title={hero.headingLines}
+        description={hero.description}
       />
-      <div className="about-image container">
-        <Photo name="workplace" priority />
-        <p className="photo-note">Representative workplace photography</p>
-      </div>
-      <section className="container editorial-split">
-        <Eyebrow>Who we are</Eyebrow>
-        <div>
-          <h2>
-            Rooted in Bangladesh.
-            <br />
-            Focused on useful progress.
-          </h2>
-          <p className="lead">
-            DeltaWave Technology brings together software engineering, business
-            applications, IT operations and digital design.
-          </p>
-          <p>
-            As a developing enterprise, our direction is deliberate: understand
-            the business need, build a sensible solution and make it
-            maintainable. Our current business contact location is in
-            Borhanuddin, Bhola, Bangladesh.
-          </p>
-          <p>
-            We aim to work with businesses, institutions and organizations that
-            need technology suited to their day to day operations, in Bangladesh
-            and potentially beyond.
-          </p>
+      {(content.image || content.imageCaption) && (
+        <div className="about-image container">
+          {content.image && <ResponsivePhoto photo={content.image} priority />}
+          {content.imageCaption && (
+            <p className="photo-note">{content.imageCaption}</p>
+          )}
         </div>
-      </section>
-      <section className="container vision-mission">
-        <article>
-          <span className="small-label">Our vision</span>
-          <h2>Technology that opens up better ways of working.</h2>
-          <p>
-            To develop a lasting technology enterprise that helps organizations
-            put practical digital systems to use.
-          </p>
-        </article>
-        <article>
-          <span className="small-label">Our mission</span>
-          <h2>
-            Understand carefully.
-            <br />
-            Build responsibly.
-          </h2>
-          <p>
-            To connect business understanding, thoughtful engineering and clear
-            communication in every project we undertake.
-          </p>
-        </article>
-      </section>
-      <section className="container principles">
-        <SectionHead
-          label="Our approach"
-          title="The decisions behind the work."
-        />
+      )}
+      <section className="container editorial-split">
+        {intro.eyebrow && <Eyebrow>{intro.eyebrow}</Eyebrow>}
         <div>
-          {[
-            [
-              "Business context first",
-              "We look at the people, data and constraints around a problem before selecting a technology.",
-            ],
-            [
-              "Maintainability by design",
-              "Documentation, access boundaries and an understandable architecture belong in the original scope.",
-            ],
-            [
-              "Clear commitments",
-              "Scope, responsibilities and acceptance criteria help both sides make informed decisions.",
-            ],
-          ].map(([h, p], i) => (
-            <article key={h}>
-              <span>0{i + 1}</span>
-              <h3>{h}</h3>
-              <p>{p}</p>
-            </article>
+          <h2>
+            <Lines lines={intro.headingLines} />
+          </h2>
+          {intro.lead && <p className="lead">{intro.lead}</p>}
+          {intro.paragraphs.map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
           ))}
         </div>
       </section>
-      <section className="container editorial-split direction">
-        <Eyebrow>Our direction</Eyebrow>
-        <div>
-          <h2>A connected technology practice.</h2>
-          <p>
-            Our planned direction combines custom software, industry
-            applications, managed infrastructure and creative services. Product
-            exploration begins with coaching management and commerce operations.
-            DeltaWave Academy is a separate planned initiative for practical
-            computer and digital skills.
-          </p>
-          <TextLink href="/portfolio">Explore our product directions</TextLink>
-        </div>
+      <section className="container vision-mission">
+        {[vision, mission].map((item, i) => (
+          <article key={i}>
+            {item.label && <span className="small-label">{item.label}</span>}
+            <h2>
+              <Lines lines={item.headingLines} />
+            </h2>
+            {item.body && <p>{item.body}</p>}
+          </article>
+        ))}
       </section>
-      <ProjectCTA />
+      {principles.enabled && (
+        <section className="container principles">
+          <SectionHead label={principles.eyebrow} title={principles.title} />
+          <div>
+            {principles.items.map((item, i) => (
+              <article key={item.title}>
+                <span>0{i + 1}</span>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+      {direction.enabled && (
+        <section className="container editorial-split direction">
+          {direction.eyebrow && <Eyebrow>{direction.eyebrow}</Eyebrow>}
+          <div>
+            <h2>
+              <Lines lines={direction.headingLines} />
+            </h2>
+            {direction.body && <p>{direction.body}</p>}
+            {direction.link && (
+              <TextLink href={direction.link.href}>{direction.link.label}</TextLink>
+            )}
+          </div>
+        </section>
+      )}
+      <ProjectCTA
+        title={<Lines lines={cta.titleLines} />}
+        description={cta.description}
+        service={cta.service || undefined}
+      />
     </>
   );
 }
 
-export function ServicesPage({ catalog }: { catalog: Catalog }) {
+export function ServicesPage({
+  catalog,
+  content,
+}: {
+  catalog: Catalog;
+  content: PageContentView["services"];
+}) {
   return (
     <>
       <PageHero
-        label="Our services"
-        title="Engineering the idea.<br/>Supporting the everyday."
-        description="Choose a focused service or connect several capabilities around one business goal. The scope starts with what your organization needs to do."
+        label={content.hero.label}
+        title={content.hero.headingLines}
+        description={content.hero.description}
       >
-        <ButtonLink href="/contact">Discuss your requirements</ButtonLink>
+        {content.heroButton && (
+          <ButtonLink href="/contact">{content.heroButton}</ButtonLink>
+        )}
       </PageHero>
       <section className="container services-directory">
         {catalog.categories.map((c) => (
@@ -434,8 +422,9 @@ export function ServicesPage({ catalog }: { catalog: Catalog }) {
         ))}
       </section>
       <ProjectCTA
-        title="Not sure where to start?"
-        description="Describe the challenge in your own words. We can help identify the right starting point."
+        title={<Lines lines={content.cta.titleLines} />}
+        description={content.cta.description}
+        service={content.cta.service || undefined}
       />
     </>
   );
@@ -540,23 +529,27 @@ export function ServicePage({ service: s }: { service: ServiceView }) {
   );
 }
 
-export function SolutionsPage({ solutions }: { solutions: SolutionView[] }) {
+export function SolutionsPage({
+  solutions,
+  content,
+}: {
+  solutions: SolutionView[];
+  content: PageContentView["solutions"];
+}) {
+  const { opening } = content;
   return (
     <>
       <PageHero
-        label="Custom solutions for your industry"
-        title="Your industry.<br/>Your way of working."
-        description="Explore the kinds of tailored applications we can build. Each solution begins with your workflows, users and operational requirements."
+        label={content.hero.label}
+        title={content.hero.headingLines}
+        description={content.hero.description}
       />
       <section className="container solutions-opening">
-        <p className="small-label">Industry applications</p>
-        <p>
-          These are custom development capabilities. They are scoped for each
-          organization and are not a catalog of ready to purchase products.
-        </p>
-        <TextLink href="/services/business-industry-solutions">
-          Our industry approach
-        </TextLink>
+        {opening.label && <p className="small-label">{opening.label}</p>}
+        {opening.body && <p>{opening.body}</p>}
+        {opening.link && (
+          <TextLink href={opening.link.href}>{opening.link.label}</TextLink>
+        )}
       </section>
       <section className="container directory-section">
         <SolutionsDirectory
@@ -570,9 +563,9 @@ export function SolutionsPage({ solutions }: { solutions: SolutionView[] }) {
         />
       </section>
       <ProjectCTA
-        title="Your industry is only the starting point."
-        description="Every organization works a little differently. Tell us about the process you would like to improve."
-        service="Business & industry solutions"
+        title={<Lines lines={content.cta.titleLines} />}
+        description={content.cta.description}
+        service={content.cta.service || undefined}
       />
     </>
   );
@@ -675,24 +668,30 @@ export function SolutionPage({ solution: s }: { solution: SolutionView }) {
   );
 }
 
-export function PortfolioPage({ projects }: { projects: ProjectView[] }) {
+export function PortfolioPage({
+  projects,
+  content,
+}: {
+  projects: ProjectView[];
+  content: PageContentView["portfolio"];
+}) {
   // The note describes concepts, so it is shown only while every entry is one.
   const onlyConcepts = projects.length > 0 && projects.every(isPlannedConcept);
+  const { note } = content;
   return (
     <>
       <PageHero
-        label="Portfolio & product direction"
-        title="Useful ideas.<br/>Considered possibilities."
-        description="A transparent view of the work we are exploring. We will add approved projects, demonstrations and case studies as they become ready to share."
+        label={content.hero.label}
+        title={content.hero.headingLines}
+        description={content.hero.description}
       />
       <section className="container portfolio-directory">
-        {onlyConcepts && (
+        {onlyConcepts && (note.statusLabel || note.body) && (
           <div className="portfolio-note">
-            <span className="status-label">Early product direction</span>
-            <p>
-              The entries below are planned product concepts. Development, launch
-              dates and commercial availability have not been confirmed.
-            </p>
+            {note.statusLabel && (
+              <span className="status-label">{note.statusLabel}</span>
+            )}
+            {note.body && <p>{note.body}</p>}
           </div>
         )}
         <ProjectList
@@ -708,7 +707,11 @@ export function PortfolioPage({ projects }: { projects: ProjectView[] }) {
           }))}
         />
       </section>
-      <ProjectCTA title="Have a problem worth exploring?" />
+      <ProjectCTA
+        title={<Lines lines={content.cta.titleLines} />}
+        description={content.cta.description}
+        service={content.cta.service || undefined}
+      />
     </>
   );
 }
@@ -793,210 +796,129 @@ export function ProjectPage({ project: p }: { project: ProjectView }) {
   );
 }
 
-export function AcademyPage() {
+export function AcademyPage({ content }: { content: PageContentView["academy"] }) {
+  const { hero, intention, topics, next } = content;
   return (
     <>
       <section className="container academy-hero">
         <div>
-          <Eyebrow>DeltaWave Academy</Eyebrow>
+          {hero.eyebrow && <Eyebrow>{hero.eyebrow}</Eyebrow>}
           <h1>
-            Learn the skills.
-            <br />
-            Open up
-            <br />
-            <span>possibilities.</span>
+            <Lines lines={hero.headingLines} />
+            {hero.headingAccent && (
+              <>
+                {hero.headingLines.length > 0 && <br />}
+                <span>{hero.headingAccent}</span>
+              </>
+            )}
           </h1>
-          <p className="lead">
-            A planned initiative in computer training and digital skills, shaped
-            around practical work and everyday confidence.
-          </p>
-          <span className="status-label">
-            In planning · Enrollment is not open
-          </span>
+          {hero.description && <p className="lead">{hero.description}</p>}
+          {hero.statusLabel && (
+            <span className="status-label">{hero.statusLabel}</span>
+          )}
         </div>
-        <Photo name="education" priority />
+        {hero.image && <ResponsivePhoto photo={hero.image} priority />}
       </section>
-      <section className="container editorial-split">
-        <Eyebrow>The intention</Eyebrow>
-        <div>
-          <h2>
-            Learning that connects
-            <br />
-            to the real world.
-          </h2>
-          <p>
-            The Academy is planned for phased implementation. Its direction
-            includes foundational computer skills, workplace tools and pathways
-            into digital work.
-          </p>
-          <p>
-            Course schedules, delivery formats, fees and instructors will be
-            shared only after they are confirmed. There are no open courses or
-            reserved seats at this stage.
-          </p>
-        </div>
-      </section>
-      <section className="container academy-topics">
-        <SectionHead
-          label="Proposed learning areas"
-          title="Build a foundation. Then find your direction."
-        />
-        <div>
-          {[
-            {
-              n: "01",
-              title: "Everyday digital confidence",
-              items: [
-                "Computer fundamentals",
-                "Microsoft Office",
-                "Productivity applications",
-                "Business software training",
-              ],
-            },
-            {
-              n: "02",
-              title: "Building for the web",
-              items: [
-                "Programming fundamentals",
-                "Web development",
-                "Professional IT skills",
-              ],
-            },
-            {
-              n: "03",
-              title: "Creative & business skills",
-              items: [
-                "Graphic design",
-                "Digital marketing",
-                "E-commerce operations",
-              ],
-            },
-          ].map((g) => (
-            <article key={g.n}>
-              <span className="topic-number">{g.n}</span>
-              <h3>{g.title}</h3>
-              <ul>
-                {g.items.map((i) => (
-                  <li key={i}>{i}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
-      <section className="container academy-next">
-        <div>
-          <Eyebrow>A phased initiative</Eyebrow>
-          <h2>
-            Help us understand
-            <br />
-            what you want to learn.
-          </h2>
-          <p>
-            You can share your interests or suggest a training need for your
-            organization. An enquiry is not enrollment or a place reservation.
-          </p>
-        </div>
-        <ButtonLink href="/contact?service=Academy%20interest">
-          Share your learning interests
-        </ButtonLink>
-      </section>
+      {intention.enabled && (
+        <section className="container editorial-split">
+          {intention.eyebrow && <Eyebrow>{intention.eyebrow}</Eyebrow>}
+          <div>
+            <h2>
+              <Lines lines={intention.headingLines} />
+            </h2>
+            {intention.paragraphs.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
+          </div>
+        </section>
+      )}
+      {topics.enabled && (
+        <section className="container academy-topics">
+          <SectionHead label={topics.eyebrow} title={topics.title} />
+          <div>
+            {topics.groups.map((group, i) => (
+              <article key={group.title}>
+                <span className="topic-number">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3>{group.title}</h3>
+                <ul>
+                  {group.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+      {next.enabled && (
+        <section className="container academy-next">
+          <div>
+            {next.eyebrow && <Eyebrow>{next.eyebrow}</Eyebrow>}
+            <h2>
+              <Lines lines={next.headingLines} />
+            </h2>
+            {next.body && <p>{next.body}</p>}
+          </div>
+          {next.link && (
+            <ButtonLink href={next.link.href}>{next.link.label}</ButtonLink>
+          )}
+        </section>
+      )}
     </>
   );
 }
 
-export function ContactPage() {
+export function ContactPage({
+  content,
+  contact,
+}: {
+  content: PageContentView["contact"];
+  contact: ContactSectionData;
+}) {
+  const { hero, section, next } = content;
   return (
     <>
       <section className="contact-page-intro container">
-        <Eyebrow>Contact DeltaWave</Eyebrow>
+        {hero.eyebrow && <Eyebrow>{hero.eyebrow}</Eyebrow>}
         <h1>
-          What would you like
-          <br />
-          to make possible?
+          <Lines lines={hero.headingLines} />
         </h1>
-        <p className="lead">
-          A new idea, a better process or a system that needs attention. We are
-          ready to understand the starting point.
-        </p>
+        {hero.description && <p className="lead">{hero.description}</p>}
       </section>
-      <ContactSection standalone />
-      <section className="container contact-next">
-        <Eyebrow>What happens next</Eyebrow>
-        <div>
-          <h2>A conversation before a commitment.</h2>
-          <p>
-            We review the context you share, clarify the requirements and
-            discuss an appropriate next step. Please avoid including passwords,
-            payment details or sensitive personal records in an initial enquiry.
-          </p>
-        </div>
-      </section>
+      <ContactSection
+        standalone
+        eyebrow={section.eyebrow}
+        heading={<Lines lines={section.headingLines} />}
+        data={contact}
+      />
+      {next.enabled && (
+        <section className="container contact-next">
+          {next.eyebrow && <Eyebrow>{next.eyebrow}</Eyebrow>}
+          <div>
+            <h2>
+              <Lines lines={next.headingLines} />
+            </h2>
+            {next.body && <p>{next.body}</p>}
+          </div>
+        </section>
+      )}
     </>
   );
 }
 
-export function PrivacyPage() {
+/** Any standalone page from the CMS, such as the privacy notice. */
+export function StandalonePage({ page }: { page: Page }) {
   return (
     <>
       <PageHero
-        label="Privacy & enquiries"
-        title="A clear purpose for the details you share."
-        description="This notice explains how contact information is used when you enquire about DeltaWave Technology services."
+        label={page.hero?.eyebrow || page.title}
+        title={(page.hero?.heading || page.title).split(/\r?\n/)}
+        description={page.hero?.description || ""}
       />
       <article className="container prose">
-        <h2>Information you provide</h2>
-        <p>
-          The enquiry form asks for your name, email address, phone number,
-          optional organization, service interest and a project description.
-          Please do not include passwords, payment card information or sensitive
-          records.
-        </p>
-        <h2>Why we use it</h2>
-        <p>
-          We use the details to understand your request, communicate with you
-          and assess a possible engagement. Submitting an enquiry does not
-          subscribe you to marketing.
-        </p>
-        <h2>Delivery and security</h2>
-        <p>
-          When online submissions are enabled, the form uses Cloudflare
-          Turnstile for spam protection and Resend for email delivery to the
-          business contact inbox. These providers process the information needed
-          to perform those services. The website does not maintain a separate
-          enquiry database.
-        </p>
-        <h2>When online delivery is unavailable</h2>
-        <p>
-          The form clearly indicates when it is not configured. You can contact
-          us directly by email or phone. A successful form message is shown only
-          after the email provider confirms acceptance, which does not guarantee
-          inbox delivery.
-        </p>
-        <h2>Retention and your requests</h2>
-        <p>
-          Enquiry correspondence is retained in the business inbox while it is
-          needed to respond and manage a possible engagement. For access,
-          correction or deletion requests, contact{" "}
-          <a href={"mailto:" + site.email}>{site.email}</a>. Any legal or
-          contractual retention requirements will be considered when handling a
-          request.
-        </p>
-        <h2>Cookies and analytics</h2>
-        <p>
-          This website does not add advertising or analytics cookies. If
-          enabled, the spam protection provider may use technical signals for
-          verification. Access to this private preview is managed by the hosting
-          platform, whose own privacy terms apply.
-        </p>
-        <h2>Business contact</h2>
-        <p>
-          DeltaWave Technology
-          <br />
-          {site.location}
-          <br />
-          <a href={"mailto:" + site.email}>{site.email}</a>
-        </p>
+        <RichText data={page.body} />
       </article>
     </>
   );

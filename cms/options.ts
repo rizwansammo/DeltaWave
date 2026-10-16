@@ -24,3 +24,6 @@ export const projectStatuses = [
   "Live",
   "Completed",
 ] as const;
+
+/** Enquiry form options offered besides the published service categories. */
+export const extraServiceOptions = ["Academy interest", "Other"];

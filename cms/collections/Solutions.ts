@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { generatePreviewURL } from "../preview";
 import { auditFields, seoField, slugField } from "../fields";
 import { solutionGroups } from "../options";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
@@ -11,6 +12,7 @@ export const Solutions: CollectionConfig = {
     useAsTitle: "title",
     defaultColumns: ["order", "title", "group", "slug", "_status"],
     group: "Website content",
+    preview: generatePreviewURL("solutions"),
     description:
       "Custom development capabilities under /solutions. Not ready-to-buy products.",
   },

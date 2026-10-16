@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { generatePreviewURL } from "../preview";
 import { auditFields, seoField, slugField } from "../fields";
 import { projectStatuses, projectTypes } from "../options";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
@@ -12,6 +13,7 @@ export const PortfolioProjects: CollectionConfig = {
     useAsTitle: "name",
     defaultColumns: ["name", "type", "projectStatus", "_status", "updatedAt"],
     group: "Website content",
+    preview: generatePreviewURL("portfolio-projects"),
     description:
       "Projects and product directions under /portfolio. Publish real client work only with written permission.",
   },

@@ -29,6 +29,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // A draft preview is never indexed or stored in a shared cache.
+      {
+        source: "/:path*",
+        has: [{ type: "cookie", key: "__prerender_bypass" }],
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+        ],
+      },
       // Private CMS routes are never indexed, independent of robots.txt.
       { source: "/admin", headers: noIndex },
       { source: "/admin/:path*", headers: noIndex },

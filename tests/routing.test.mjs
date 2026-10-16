@@ -22,9 +22,11 @@ test("CMS is mounted at /admin with its API at /cms-api", () => {
   assert.ok(!existsSync("app/(payload)/api"));
 });
 
-test("/api only contains the enquiry endpoint", async () => {
-  assert.deepEqual(await readdir("app/api"), ["enquiry"]);
+test("/api only contains the site's own endpoints", async () => {
+  // The enquiry form and the staff draft preview. Payload stays on /cms-api.
+  assert.deepEqual(await readdir("app/api"), ["enquiry", "preview"]);
   assert.deepEqual(await readdir("app/api/enquiry"), ["route.ts"]);
+  assert.deepEqual(await readdir("app/api/preview"), ["exit", "route.ts"]);
 });
 
 test("public content never uses CMS or API prefixes", () => {

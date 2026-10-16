@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { generatePreviewURL } from "../preview";
 import { auditFields, seoField, slugField } from "../fields";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
 
@@ -10,6 +11,7 @@ export const ServiceCategories: CollectionConfig = {
     useAsTitle: "title",
     defaultColumns: ["number", "title", "slug", "_status"],
     group: "Website content",
+    preview: generatePreviewURL("service-categories"),
     description:
       "The four capability groups shown on the Services page, mega menu and homepage.",
   },

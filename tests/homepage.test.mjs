@@ -16,9 +16,24 @@ import { isDatabaseUnavailable } from "../lib/cms/errors.ts";
 import { homepageNotices, readHomepage } from "../lib/cms/homepage-state.ts";
 import { refuseUnpublish } from "../cms/globals/Homepage.ts";
 import { site } from "../lib/site.ts";
+import { approvedPageContentView, approvedSettingsView, businessContact } from "../lib/cms/pages-view.ts";
+import { approvedCatalog } from "../lib/cms/catalog-approved.ts";
+import { extraServiceOptions } from "../cms/options.ts";
+
+// The contact band's business details come from the published site settings.
+const approvedSettings = approvedSettingsView();
+const contactData = {
+  introLines: approvedPageContentView().contact.section.detailsIntroLines,
+  note: approvedPageContentView().contact.section.note,
+  details: businessContact(approvedSettings),
+  serviceOptions: [
+    ...approvedCatalog().categories.map((category) => category.title),
+    ...extraServiceOptions,
+  ],
+};
 
 const markup = (content) =>
-  renderToStaticMarkup(h(HomePage, { content })).replace(
+  renderToStaticMarkup(h(HomePage, { content, contact: contactData })).replace(
     /^(<link rel="preload" as="image"[^>]*\/>)+/,
     "",
   );

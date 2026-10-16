@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { generatePreviewURL } from "../preview";
 import { auditFields, seoField, slugField } from "../fields";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
 
@@ -18,6 +19,7 @@ export const Pages: CollectionConfig = {
     useAsTitle: "title",
     defaultColumns: ["title", "slug", "_status", "updatedAt"],
     group: "Website content",
+    preview: generatePreviewURL("pages"),
     description:
       "Standalone pages with an editorial hero and body text, such as the privacy notice.",
   },

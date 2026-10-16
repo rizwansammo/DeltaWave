@@ -1,8 +1,9 @@
 import { Fragment } from "react";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 import { Brand } from "./brand";
-import { nav, site } from "@/lib/site";
+import { nav } from "@/lib/site";
 import { staticPhoto, type PhotoSource } from "@/lib/images";
+import type { SettingsView } from "@/lib/cms/pages-view";
 
 export function ButtonLink({
   href,
@@ -88,11 +89,21 @@ export function Photo({
   );
 }
 /** Text with each entry on its own line, as typed in the CMS. */
-export function Lines({ lines }: { lines: string[] }) {
+export function Lines({
+  lines,
+  breakClassName,
+  spaced = false,
+}: {
+  lines: string[];
+  /** Class for the <br>, for breaks that only apply at some widths. */
+  breakClassName?: string;
+  /** Keep the space a sentence has when it wraps instead of breaking. */
+  spaced?: boolean;
+}) {
   return lines.map((line, i) => (
     <Fragment key={i}>
-      {i > 0 && <br />}
-      {line}
+      {i > 0 && <br className={breakClassName} />}
+      {i > 0 && spaced ? " " + line : line}
     </Fragment>
   ));
 }
@@ -122,15 +133,16 @@ export function PageHero({
   children,
 }: {
   label: string;
-  title: string;
+  title: string | string[];
   description: string;
   children?: React.ReactNode;
 }) {
+  const lines = Array.isArray(title) ? title : title.split("<br/>");
   return (
     <section className="page-hero container">
       <Eyebrow>{label}</Eyebrow>
       <h1>
-        {title.split("<br/>").map((line, i) => (
+        {lines.map((line, i) => (
           <span key={i}>
             {i > 0 && <br />}
             {line}
@@ -170,7 +182,7 @@ export function ProjectCTA({
   description = "Tell us what your business needs to do. We can start with the problem, then define the right scope.",
   service,
 }: {
-  title?: string;
+  title?: React.ReactNode;
   description?: string;
   service?: string;
 }) {
@@ -192,22 +204,25 @@ export function ProjectCTA({
     </section>
   );
 }
-export function Footer() {
+export function Footer({ settings }: { settings: SettingsView }) {
+  const { footer } = settings;
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-main">
           <div className="footer-brand">
             <Brand />
-            <p>
-              Thoughtful engineering.
-              <br />
-              Practical business technology.
-            </p>
-            <a className="text-link" href={"mailto:" + site.email}>
-              {site.email}
-              <ArrowUpRight size={15} />
-            </a>
+            {footer.statementLines.length > 0 && (
+              <p>
+                <Lines lines={footer.statementLines} />
+              </p>
+            )}
+            {settings.email && (
+              <a className="text-link" href={"mailto:" + settings.email}>
+                {settings.email}
+                <ArrowUpRight size={15} />
+              </a>
+            )}
           </div>
           <div className="footer-nav">
             <p className="small-label">Explore</p>
@@ -220,22 +235,32 @@ export function Footer() {
               ))}
           </div>
           <div className="footer-location">
-            <p className="small-label">Based in Bangladesh</p>
-            <address>{site.location}</address>
-            <a href={"tel:" + site.phone}>{site.phoneDisplay}</a>
-            <p className="footer-caption">
-              Building with a local understanding
-              <br />
-              and a wider perspective.
-            </p>
+            {footer.locationLabel && (
+              <p className="small-label">{footer.locationLabel}</p>
+            )}
+            {settings.location && <address>{settings.location}</address>}
+            {settings.phone && (
+              <a href={"tel:" + settings.phone}>
+                {settings.phoneDisplay || settings.phone}
+              </a>
+            )}
+            {footer.captionLines.length > 0 && (
+              <p className="footer-caption">
+                <Lines lines={footer.captionLines} />
+              </p>
+            )}
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} DeltaWave Technology</p>
+          <p>
+            © {new Date().getFullYear()} {settings.siteName}
+          </p>
           <a href="/privacy">Privacy & enquiries</a>
-          <a href="/contact">
-            Let’s build something useful <ArrowRight size={14} />
-          </a>
+          {footer.closingLink && (
+            <a href={footer.closingLink.href}>
+              {footer.closingLink.label} <ArrowRight size={14} />
+            </a>
+          )}
         </div>
       </div>
     </footer>

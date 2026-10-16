@@ -7,6 +7,7 @@ import {
   type TextareaFieldValidation,
 } from "payload";
 import { linkGroup, updatedByField } from "../fields";
+import { generatePreviewURL } from "../preview";
 import { globalAccess, globalAdminComponents, globalHooks, globalVersions } from "../versioned";
 
 // The homepage is a fixed editorial composition. Editors change copy, images,
@@ -132,6 +133,7 @@ export const Homepage: GlobalConfig = {
   label: "Homepage",
   admin: {
     group: "Website content",
+    preview: generatePreviewURL("homepage"),
     description:
       "Copy and media for the homepage composition. The order and layout of sections are fixed by the design system. Save a draft to prepare changes privately; visitors see them after an administrator publishes.",
     components: globalAdminComponents,

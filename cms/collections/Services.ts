@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { generatePreviewURL } from "../preview";
 import { auditFields, seoField, slugField } from "../fields";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
 
@@ -8,6 +9,7 @@ export const Services: CollectionConfig = {
     useAsTitle: "title",
     defaultColumns: ["title", "category", "slug", "_status", "updatedAt"],
     group: "Website content",
+    preview: generatePreviewURL("services"),
     description: "Service detail pages under /services.",
   },
   access: contentAccess,

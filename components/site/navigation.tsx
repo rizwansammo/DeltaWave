@@ -6,12 +6,19 @@ import { Brand } from "./brand";
 import { nav } from "@/lib/site";
 import { solutionGroups } from "@/cms/options";
 import type { NavigationMenu } from "@/lib/cms/catalog-view";
+import type { SettingsView } from "@/lib/cms/pages-view";
 
 /**
  * The site header. Menu content comes from the published CMS records; while
  * it is unavailable (menu is null) the header keeps its plain links only.
  */
-export function Navigation({ menu }: { menu: NavigationMenu | null }) {
+export function Navigation({
+  menu,
+  settings,
+}: {
+  menu: NavigationMenu | null;
+  settings: SettingsView;
+}) {
   const hasMenu = (n: string) => menu !== null && (n === "Services" || n === "Solutions");
   const path = usePathname();
   const [open, setOpen] = useState<string | null>(null),
@@ -132,9 +139,11 @@ export function Navigation({ menu }: { menu: NavigationMenu | null }) {
             );
           })}
         </nav>
-        <a className="header-cta" href="/contact">
-          Let’s talk <ArrowUpRight size={17} />
-        </a>
+        {settings.headerCta && (
+          <a className="header-cta" href={settings.headerCta.href}>
+            {settings.headerCta.label} <ArrowUpRight size={17} />
+          </a>
+        )}
         <button
           className="mobile-toggle"
           aria-label={mobile ? "Close navigation" : "Open navigation"}

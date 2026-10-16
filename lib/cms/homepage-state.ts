@@ -17,7 +17,7 @@ import { approvedHomepageView, toHomepageView, type HomepageView } from "./homep
 // replaced by the approved defaults. Any other failure is thrown, so access,
 // validation and programming errors surface instead of being masked.
 
-export type HomepageState = "published" | "draft" | "uninitialized" | "unavailable";
+export type HomepageState = "published" | "preview" | "draft" | "uninitialized" | "unavailable";
 export type HomepageResult = { state: HomepageState; content: HomepageView };
 export type HomepageReader = Pick<
   Payload,
@@ -25,6 +25,9 @@ export type HomepageReader = Pick<
 >;
 
 const asVisitor = { overrideAccess: false, draft: false } as const;
+
+/** While previewing, staff read their own drafts through access control. */
+export type ReadOptions = { overrideAccess: false; draft: boolean; user?: unknown };
 
 export const homepageNotices = {
   draft:
@@ -42,6 +45,7 @@ const approved = (state: Exclude<HomepageState, "published">): HomepageResult =>
 
 export async function readHomepage(
   connect: () => Promise<HomepageReader>,
+  options: ReadOptions = asVisitor,
 ): Promise<HomepageResult> {
   let payload: HomepageReader;
   try {
@@ -57,7 +61,7 @@ export async function readHomepage(
       payload.findGlobal({
         slug: "homepage",
         depth: 2,
-        ...asVisitor,
+        ...options,
         populate: {
           media: {
             url: true,
@@ -85,13 +89,17 @@ export async function readHomepage(
         sort: "number",
         depth: 0,
         pagination: false,
-        ...asVisitor,
+        ...options,
         select: { slug: true, number: true, title: true, description: true },
       }),
     ]);
 
     if (doc?._status === "published") {
       return { state: "published", content: toHomepageView(doc, categories.docs) };
+    }
+    // A member of staff previewing an unpublished draft.
+    if (options.draft && doc?.updatedAt) {
+      return { state: "preview", content: toHomepageView(doc, categories.docs) };
     }
 
     // Nothing is published. Counting versions reads no content, so it may

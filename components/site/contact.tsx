@@ -8,8 +8,26 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
-import { site, serviceOptions } from "@/lib/site";
-import { Eyebrow } from "./shared";
+import { Eyebrow, Lines } from "./shared";
+
+/** Business contact details, from the published site settings. */
+export type ContactDetails = {
+  siteName: string;
+  email: string;
+  phone: string;
+  phoneDisplay: string;
+  location: string;
+  publicWebsite: string;
+};
+
+/** Everything the contact band needs besides its heading. */
+export type ContactSectionData = {
+  introLines: string[];
+  note: string;
+  details: ContactDetails;
+  /** The options of the "Service required" list, in order. */
+  serviceOptions: string[];
+};
 type Turnstile = {
   render: (el: HTMLElement, opts: Record<string, unknown>) => string;
   reset: (id: string) => void;
@@ -23,26 +41,23 @@ declare global {
 // A ?service= preselection from the address bar. The server snapshot is empty,
 // so the first client render matches the static HTML.
 const ignoreChanges = () => () => {};
-function requestedService() {
+function requestedService(options: string[]) {
   const requested = new URLSearchParams(location.search).get("service");
-  return requested && serviceOptions.includes(requested) ? requested : "";
+  return requested && options.includes(requested) ? requested : "";
 }
 export function ContactSection({
   standalone = false,
-  eyebrow = "Let’s start with your idea",
-  heading = (
-    <>
-      A better way forward
-      <br />
-      starts with a conversation.
-    </>
-  ),
+  eyebrow,
+  heading,
+  data,
 }: {
   standalone?: boolean;
   /** Empty hides the eyebrow. */
-  eyebrow?: string;
-  heading?: React.ReactNode;
+  eyebrow: string;
+  heading: React.ReactNode;
+  data: ContactSectionData;
 }) {
+  const { details, serviceOptions } = data;
   const [state, setState] = useState<"idle" | "sending" | "success" | "error">(
       "idle",
     ),
@@ -51,7 +66,7 @@ export function ContactSection({
     [chosenService, setService] = useState<string | null>(null);
   const requested = useSyncExternalStore(
     ignoreChanges,
-    requestedService,
+    () => requestedService(serviceOptions),
     () => "",
   );
   const service = chosenService ?? requested;
@@ -249,40 +264,52 @@ export function ContactSection({
         </div>
         <div className="contact-columns">
           <div className="contact-details">
-            <h3>DeltaWave Technology</h3>
-            <p>
-              Tell us about your business, the challenge
-              <br className="desktop-only" /> you are facing, or the idea you
-              want to explore.
-            </p>
-            <div className="contact-detail">
-              <MapPin size={18} />
-              <div>
-                <span className="small-label">Business location</span>
-                <address>{site.location}</address>
+            {details.siteName && <h3>{details.siteName}</h3>}
+            {data.introLines.length > 0 && (
+              <p>
+                <Lines
+                  lines={data.introLines}
+                  breakClassName="desktop-only"
+                  spaced
+                />
+              </p>
+            )}
+            {details.location && (
+              <div className="contact-detail">
+                <MapPin size={18} />
+                <div>
+                  <span className="small-label">Business location</span>
+                  <address>{details.location}</address>
+                </div>
               </div>
-            </div>
-            <div className="contact-detail">
-              <Mail size={18} />
-              <div>
-                <span className="small-label">Email us</span>
-                <a href={"mailto:" + site.email}>{site.email}</a>
+            )}
+            {details.email && (
+              <div className="contact-detail">
+                <Mail size={18} />
+                <div>
+                  <span className="small-label">Email us</span>
+                  <a href={"mailto:" + details.email}>{details.email}</a>
+                </div>
               </div>
-            </div>
-            <div className="contact-detail">
-              <Phone size={18} />
-              <div>
-                <span className="small-label">Call us</span>
-                <a href={"tel:" + site.phone}>{site.phoneDisplay}</a>
+            )}
+            {details.phone && (
+              <div className="contact-detail">
+                <Phone size={18} />
+                <div>
+                  <span className="small-label">Call us</span>
+                  <a href={"tel:" + details.phone}>
+                    {details.phoneDisplay || details.phone}
+                  </a>
+                </div>
               </div>
-            </div>
-            <a className="website-link" href="/">
-              {site.publicWebsite}
-              <ArrowUpRight size={15} />
-            </a>
-            <p className="contact-note">
-              A project brief is helpful. A good question is enough to begin.
-            </p>
+            )}
+            {details.publicWebsite && (
+              <a className="website-link" href="/">
+                {details.publicWebsite}
+                <ArrowUpRight size={15} />
+              </a>
+            )}
+            {data.note && <p className="contact-note">{data.note}</p>}
           </div>
           <form
             ref={formRef}
@@ -372,7 +399,7 @@ export function ContactSection({
             {available === false && (
               <p className="form-availability">
                 Online enquiries are being prepared. You can reach us directly
-                at <a href={"mailto:" + site.email}>{site.email}</a>.
+                at <a href={"mailto:" + details.email}>{details.email}</a>.
               </p>
             )}
             <div

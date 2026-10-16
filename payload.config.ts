@@ -24,7 +24,9 @@ import { Services } from "./cms/collections/Services";
 import { Solutions } from "./cms/collections/Solutions";
 import { Users } from "./cms/collections/Users";
 import { Homepage } from "./cms/globals/Homepage";
+import { PageContent } from "./cms/globals/PageContent";
 import { SiteSettings } from "./cms/globals/SiteSettings";
+import { livePreviewBreakpoints, livePreviewEntities, previewPathFor, previewUrl } from "./cms/preview";
 import { site } from "./lib/site";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -50,6 +52,17 @@ export default buildConfig({
     theme: "light",
     avatar: "default",
     importMap: { baseDir: dirname },
+    // Staff preview drafts in the real design. /api/preview checks the
+    // signed-in account before enabling Next.js draft mode.
+    livePreview: {
+      ...livePreviewEntities,
+      breakpoints: livePreviewBreakpoints,
+      url: ({ collectionConfig, data, globalConfig }) => {
+        const entity = collectionConfig?.slug ?? globalConfig?.slug ?? "";
+        const path = previewPathFor(entity, data ?? {});
+        return path ? previewUrl(path) : "";
+      },
+    },
     meta: {
       // Payload inserts the space before the suffix.
       titleSuffix: "| DeltaWave CMS",
@@ -104,7 +117,7 @@ export default buildConfig({
     Media,
     Users,
   ],
-  globals: [Homepage, SiteSettings],
+  globals: [Homepage, PageContent, SiteSettings],
   // A deliberately small rich text toolset keeps editorial pages consistent
   // with the design system.
   editor: lexicalEditor({

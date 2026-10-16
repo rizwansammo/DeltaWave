@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { renderSite } from "./render-site.mjs";
 import { navigationMenu, toCatalog, isPlannedConcept } from "../lib/cms/catalog-view.ts";
 import { approvedCatalog } from "../lib/cms/catalog-approved.ts";
+import { approvedPageContentView, approvedSettingsView } from "../lib/cms/pages-view.ts";
 import { metadataFor } from "../lib/metadata.ts";
 import { ProjectPage, PortfolioPage } from "../components/site/pages.tsx";
 import { Navigation } from "../components/site/navigation.tsx";
@@ -100,13 +101,17 @@ test("concept wording is only used for planned product concepts", () => {
   assert.doesNotMatch(page, /No commercial release|not a completed project|not a product screenshot/);
   assert.match(page, /<span>Real projects<\/span>/);
   assert.doesNotMatch(page, /related industry solution/, "no link to an unpublished solution");
-  const portfolio = renderToStaticMarkup(h(PortfolioPage, { projects: [project] }));
+  const content = approvedPageContentView().portfolio;
+  const portfolio = renderToStaticMarkup(h(PortfolioPage, { projects: [project], content }));
   assert.doesNotMatch(portfolio, /planned product concepts/);
-  assert.match(renderToStaticMarkup(h(PortfolioPage, { projects: approvedCatalog().projects })), /planned product concepts/);
+  assert.match(
+    renderToStaticMarkup(h(PortfolioPage, { projects: approvedCatalog().projects, content })),
+    /planned product concepts/,
+  );
 });
 
 test("without menu data the header keeps its plain links only", () => {
-  const html = renderToStaticMarkup(h(Navigation, { menu: null }));
+  const html = renderToStaticMarkup(h(Navigation, { menu: null, settings: approvedSettingsView() }));
   assert.match(html, /href="\/services"/);
   assert.doesNotMatch(html, /mega-menu|mobile-submenu|nav-toggle/);
 });

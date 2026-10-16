@@ -10,6 +10,7 @@ export type Enquiry = {
   challenge: string;
   startedAt: number;
 };
+/** The options the form offers when the CMS cannot be read. */
 export const acceptedServices = [
   "Software engineering & SaaS",
   "Business & industry solutions",
@@ -18,7 +19,10 @@ export const acceptedServices = [
   "Academy interest",
   "Other",
 ];
-export function validateEnquiry(input: unknown): {
+export function validateEnquiry(
+  input: unknown,
+  allowedServices: string[] = acceptedServices,
+): {
   data?: Enquiry;
   errors: Record<string, string>;
 } {
@@ -55,7 +59,7 @@ export function validateEnquiry(input: unknown): {
     errors.phone = "Please enter a valid phone number.";
   if (data.company.length > 120)
     errors.company = "Please keep the organization name under 120 characters.";
-  if (!acceptedServices.includes(data.service))
+  if (!allowedServices.includes(data.service))
     errors.service = "Please choose a listed service.";
   if (data.description.length < 20 || data.description.length > 5000)
     errors.description =
@@ -81,6 +85,8 @@ export type EnquiryConfig = {
   siteKey?: string;
   expectedUrl: string;
   production: boolean;
+  /** Published service options; defaults to the approved list. */
+  allowedServices?: string[];
 };
 export function configured(c: EnquiryConfig) {
   return !!(c.apiKey && c.from && c.turnstileSecret && c.siteKey);
@@ -157,7 +163,7 @@ export async function handleEnquiry(
   } catch {
     return response(400, { message: "The enquiry could not be read." });
   }
-  const { data, errors } = validateEnquiry(input);
+  const { data, errors } = validateEnquiry(input, c.allowedServices);
   if (!data)
     return response(422, {
       message: "Please check the highlighted fields.",
