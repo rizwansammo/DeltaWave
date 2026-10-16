@@ -135,6 +135,19 @@ export async function saveSmtp(payload: Payload, input: Record<string, unknown>,
   const parsed = parseSmtpInput(input);
   if (!parsed.ok) return { ok: false, status: 400, message: "Check the highlighted fields.", errors: parsed.errors };
   const stored = await readStored(payload);
+  // Never reuse an existing secret with a different SMTP server or login.
+  // Otherwise the old password could be sent to an unintended host after
+  // editing only the hostname in the CMS.
+  const differentIdentity =
+    (stored.host && stored.host !== parsed.fields.host) ||
+    (stored.username && stored.username !== parsed.fields.username);
+  if (!parsed.password && differentIdentity)
+    return {
+      ok: false,
+      status: 400,
+      message: "Enter the SMTP password again when changing the host or username.",
+      errors: { password: "A new host or username requires the SMTP password." },
+    };
   const data: Record<string, unknown> = {
     host: parsed.fields.host,
     port: String(parsed.fields.port),
@@ -197,6 +210,12 @@ export async function testSmtp(payload: Payload, input: Record<string, unknown>,
     if (saved.state === "not-configured" || saved.state === "incomplete")
       return { ok: false, message: "Enter the SMTP password to test.", errors: { password: "Enter the SMTP password to test." } };
     if (saved.state !== "ready") return { ok: false, message: summaries[saved.state] };
+    if (saved.connection!.host !== parsed.fields.host || saved.connection!.username !== parsed.fields.username)
+      return {
+        ok: false,
+        message: "Enter the password to test a different SMTP host or username.",
+        errors: { password: "A different SMTP server or account requires its own password." },
+      };
     password = saved.connection!.password;
   }
   const connection: SmtpConnection = { ...parsed.fields, password };
