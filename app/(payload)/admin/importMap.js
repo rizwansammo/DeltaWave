@@ -1,5 +1,3 @@
-import { SidebarOverview as SidebarOverview_dw } from '../../../components/cms/sidebar-overview'
-import { SidebarUtilities as SidebarUtilities_dw } from '../../../components/cms/sidebar-utilities'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -16,8 +14,10 @@ import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997e
 import { AdminPublishButton as AdminPublishButton_85567be6dc74de15ecf1b2d0044e64fe } from '../../../components/cms/admin-publish-button'
 import { AdminIcon as AdminIcon_755e34b4ff502d9157eea6eb5f148a5c } from '../../../components/cms/admin-icon'
 import { AdminLogo as AdminLogo_f4484d451e000dca12c735ee38cba791 } from '../../../components/cms/admin-logo'
+import { SidebarUtilities as SidebarUtilities_32b49dd254f27c2f55e23b69cdcf07e9 } from '../../../components/cms/sidebar-utilities'
 import { DashboardIntro as DashboardIntro_4f602d547e44345b0cb11a6af5ac9e99 } from '../../../components/cms/dashboard-intro'
 import { NavBrand as NavBrand_c4a39bc6e87c6541ac834630d2c5cd83 } from '../../../components/cms/nav-brand'
+import { SidebarOverview as SidebarOverview_5b5387595db898ec76d6ba0552909f36 } from '../../../components/cms/sidebar-overview'
 import { BrandedCreateFirstUser as BrandedCreateFirstUser_f2a786b1e28b674e3032fe7f7896227f } from '../../../components/cms/create-first-user'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -39,10 +39,10 @@ export const importMap = {
   "/components/cms/admin-publish-button#AdminPublishButton": AdminPublishButton_85567be6dc74de15ecf1b2d0044e64fe,
   "/components/cms/admin-icon#AdminIcon": AdminIcon_755e34b4ff502d9157eea6eb5f148a5c,
   "/components/cms/admin-logo#AdminLogo": AdminLogo_f4484d451e000dca12c735ee38cba791,
+  "/components/cms/sidebar-utilities#SidebarUtilities": SidebarUtilities_32b49dd254f27c2f55e23b69cdcf07e9,
   "/components/cms/dashboard-intro#DashboardIntro": DashboardIntro_4f602d547e44345b0cb11a6af5ac9e99,
   "/components/cms/nav-brand#NavBrand": NavBrand_c4a39bc6e87c6541ac834630d2c5cd83,
-  "/components/cms/sidebar-overview#SidebarOverview": SidebarOverview_dw,
-  "/components/cms/sidebar-utilities#SidebarUtilities": SidebarUtilities_dw,
+  "/components/cms/sidebar-overview#SidebarOverview": SidebarOverview_5b5387595db898ec76d6ba0552909f36,
   "/components/cms/create-first-user#BrandedCreateFirstUser": BrandedCreateFirstUser_f2a786b1e28b674e3032fe7f7896227f,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

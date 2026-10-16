@@ -1,19 +1,15 @@
 import type { CollectionConfig } from "payload";
 import { auditFields, seoField, slugField } from "../fields";
+import { solutionGroups } from "../options";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
-
-export const solutionGroups = [
-  "Commerce & operations",
-  "People & organizations",
-  "Services & communities",
-];
 
 export const Solutions: CollectionConfig = {
   slug: "solutions",
   labels: { singular: "Industry solution", plural: "Industry solutions" },
+  defaultSort: "order",
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "group", "slug", "_status", "updatedAt"],
+    defaultColumns: ["order", "title", "group", "slug", "_status"],
     group: "Website content",
     description:
       "Custom development capabilities under /solutions. Not ready-to-buy products.",
@@ -34,7 +30,20 @@ export const Solutions: CollectionConfig = {
       name: "group",
       type: "select",
       required: true,
-      options: solutionGroups,
+      options: [...solutionGroups],
+    },
+    {
+      name: "order",
+      label: "Directory order",
+      type: "number",
+      min: 1,
+      max: 999,
+      index: true,
+      admin: {
+        position: "sidebar",
+        description:
+          "Position in the /solutions directory and the menus (1 comes first). Entries are numbered 01, 02 and so on in this order.",
+      },
     },
     { name: "intro", type: "textarea", required: true, maxLength: 400 },
     {

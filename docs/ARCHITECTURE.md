@@ -7,7 +7,8 @@ DeltaWave Technology runs as **one Next.js application** that serves the public 
 | Path | Owner | Notes |
 | --- | --- | --- |
 | `/` | `app/(frontend)/page.tsx` | Rendered on every request from the published Homepage global (Phase 2A). See "Homepage content" below. |
-| The 42 content pages | `app/(frontend)/[...slug]` | Prerendered at build time from `lib/content.ts` until their Phase 2 migration. |
+| `/services`, `/solutions`, `/portfolio` and their 35 detail pages | `app/(frontend)/[...slug]` | Rendered on every request from the published CMS records (Phase 2B), through `lib/cms/catalog.ts`. Unknown or unpublished slugs are real 404s; a newly published record is reachable at once. |
+| About, Academy, Contact, Privacy | `app/(frontend)/[...slug]` | Still from code (Phase 2C/2D), rendered on request with the shared layout. |
 | Unknown paths | `app/(frontend)/[...slug]` → `not-found.tsx` | Real HTTP 404 with the branded page in production builds. |
 | `/admin`, `/admin/*` | `app/(payload)/admin/[[...segments]]` | Payload admin panel. Sends `X-Robots-Tag: noindex, nofollow`. |
 | `/cms-api/*` | `app/(payload)/cms-api/[...slug]/route.ts` | Payload REST API (`config.routes.api`). Sends `X-Robots-Tag`. |
@@ -58,7 +59,7 @@ ESLint 9 is end of life, so ESLint 10 is used. Three plugins bundled by `eslint-
 
 ## Homepage content
 
-`app/(frontend)/page.tsx` is dynamic (`force-dynamic`): every request reads the Homepage global, so a publish in `/admin` appears on the next page load, with no rebuild, cache tag or extra infrastructure. The other pages stay static until they move to the CMS.
+The frontend layout is dynamic (`force-dynamic`): every request reads published content, so a publish in `/admin` appears on the next page load, with no rebuild, cache tag or extra infrastructure. The header's Services and Solutions menus come from the published catalog on every page.
 
 1. `lib/cms/homepage.ts` connects with `getPayload` and calls `readHomepage` (`lib/cms/homepage-state.ts`).
 2. `readHomepage` reads the global and the service categories through the Local API with `overrideAccess: false` and `draft: false`, exactly as an anonymous visitor would. Drafts, and related records the visitor may not read (unpublished or deleted), never reach the page; Payload returns them as bare IDs and the mapper leaves them out.
@@ -72,6 +73,14 @@ ESLint 9 is end of life, so ESLint 10 is used. Three plugins bundled by `eslint-
 | `unavailable` | The database cannot be reached | The approved content | Error |
 
 Any other error (access, validation, programming) is thrown rather than hidden behind the fallback. The approved content (`lib/cms/homepage-approved.ts`) is the prototype's copy verbatim; it is also what the seed publishes. A published homepage cannot be unpublished (a `beforeChange` hook refuses it through the admin and REST API), so once published the site never falls back to it except during a database outage.
+
+## Services, solutions and portfolio content
+
+`getCatalog()` (`lib/cms/catalog.ts`) reads the published service categories, services, solutions, portfolio entries and their media through the Local API as an anonymous visitor (`overrideAccess: false`, `draft: false`, depth 0). React's `cache` makes it one read per request, shared by the header menus, the page and its metadata. `toCatalog` (`lib/cms/catalog-view.ts`) resolves relationships against the published records only, so a link to an unpublished or deleted record simply disappears. Directory order comes from the solutions' **Directory order** field and the categories' number.
+
+There is no fallback content for these pages. If the database cannot be reached the error is logged and the branded error page is shown, and the header keeps only its plain links (`getNavigationMenu` returns null). The approved catalog (`lib/cms/catalog-approved.ts`) is used only by the seed and the markup tests.
+
+The sitemap (`app/sitemap.ts`, dynamic) lists the fixed pages plus every published record without **Hide from search engines**. Such records also get `noindex` metadata.
 
 ## Media storage
 

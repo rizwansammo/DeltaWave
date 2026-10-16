@@ -297,15 +297,22 @@ export interface ServiceCategory {
   number: string;
   short: string;
   description: string;
+  /**
+   * Shown on the Services page and at the top of this category's service pages.
+   */
   image?: (number | null) | Media;
   /**
-   * The service page that introduces this category.
+   * The service page that introduces this category. Category links lead to it.
    */
   overview?: (number | null) | Service;
   /**
-   * Services listed under this category, in display order.
+   * Services listed under this category, in display order. The menu shows the first four.
    */
   services?: (number | Service)[] | null;
+  /**
+   * For a category without services: industry solutions listed under it in the Services menu. Its Services page entry lists the first six solutions instead.
+   */
+  menuSolutions?: (number | Solution)[] | null;
   /**
    * Part of the page address. Generated from the title when left empty. Changing it changes the public URL.
    */
@@ -381,6 +388,10 @@ export interface Solution {
    */
   label: string;
   group: 'Commerce & operations' | 'People & organizations' | 'Services & communities';
+  /**
+   * Position in the /solutions directory and the menus (1 comes first). Entries are numbered 01, 02 and so on in this order.
+   */
+  order?: number | null;
   intro: string;
   challenge: string;
   modules?:
@@ -597,6 +608,7 @@ export interface ServiceCategoriesSelect<T extends boolean = true> {
   image?: T;
   overview?: T;
   services?: T;
+  menuSolutions?: T;
   slug?: T;
   seo?:
     | T
@@ -655,6 +667,7 @@ export interface SolutionsSelect<T extends boolean = true> {
   title?: T;
   label?: T;
   group?: T;
+  order?: T;
   intro?: T;
   challenge?: T;
   modules?:
@@ -854,7 +867,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
- * Copy and media for the homepage composition. The order and layout of sections are fixed by the design system.
+ * Copy and media for the homepage composition. The order and layout of sections are fixed by the design system. Save a draft to prepare changes privately; visitors see them after an administrator publishes.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "homepage".
@@ -862,6 +875,9 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Homepage {
   id: number;
   hero: {
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 3 lines. Press Enter to start a new line.
@@ -872,21 +888,42 @@ export interface Homepage {
      */
     headingAccent?: string | null;
     description: string;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     primaryLink?: {
       label?: string | null;
       href?: string | null;
     };
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     secondaryLink?: {
       label?: string | null;
       href?: string | null;
     };
+    /**
+     * Link at the foot of the hero that scrolls to the introduction. Hidden while the introduction is hidden.
+     */
     scrollLabel?: string | null;
+    /**
+     * Photograph shown with the heading. Leave empty for no image.
+     */
     image?: (number | null) | Media;
     imageCaption?: string | null;
   };
   introduction?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
+    /**
+     * Shown under the eyebrow. Press Enter to start a new line.
+     */
     location?: string | null;
     /**
      * Up to 3 lines. Press Enter to start a new line.
@@ -897,56 +934,101 @@ export interface Homepage {
      */
     headingMuted?: string | null;
     body?: string | null;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     link?: {
       label?: string | null;
       href?: string | null;
     };
   };
   services?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.
      */
     heading?: string | null;
+    /**
+     * Shown beside the heading. Press Enter to start a new line.
+     */
     sideText?: string | null;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     link?: {
       label?: string | null;
       href?: string | null;
     };
+    /**
+     * Photograph shown with the service list. Leave empty for no image.
+     */
     featureImage?: (number | null) | Media;
     featureCaption?: string | null;
   };
   industries?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.
      */
     heading?: string | null;
+    /**
+     * Shown beside the heading. Press Enter to start a new line.
+     */
     sideText?: string | null;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     link?: {
       label?: string | null;
       href?: string | null;
     };
     /**
-     * Up to six, shown in a three column grid.
+     * Up to six, shown in this order in a three column grid. Unpublished or deleted solutions are left out.
      */
     featured?: (number | Solution)[] | null;
   };
   engineering?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.
      */
     heading?: string | null;
     body?: string | null;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     link?: {
       label?: string | null;
       href?: string | null;
     };
+    /**
+     * Photograph shown with the capability lines. Leave empty for no image.
+     */
     image?: (number | null) | Media;
+    /**
+     * Up to four short lines.
+     */
     capabilities?:
       | {
           item: string;
@@ -955,30 +1037,51 @@ export interface Homepage {
       | null;
   };
   portfolio?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.
      */
     heading?: string | null;
+    /**
+     * Shown beside the heading. Press Enter to start a new line.
+     */
     sideText?: string | null;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     link?: {
       label?: string | null;
       href?: string | null;
     };
     /**
-     * Up to two entries. Only published entries appear.
+     * Up to two entries, shown in this order. Unpublished or deleted entries are left out.
      */
     projects?: (number | PortfolioProject)[] | null;
   };
   approach?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.
      */
     heading?: string | null;
     body?: string | null;
+    /**
+     * Two to six steps, numbered in this order.
+     */
     steps?:
       | {
           title: string;
@@ -988,7 +1091,13 @@ export interface Homepage {
       | null;
   };
   academy?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.
@@ -999,14 +1108,26 @@ export interface Homepage {
      * State the real status, for example In planning · Enrollment is not open.
      */
     statusLabel?: string | null;
+    /**
+     * Shown only when both the label and the link are filled in.
+     */
     link?: {
       label?: string | null;
       href?: string | null;
     };
+    /**
+     * Photograph shown with the text. Leave empty for no image.
+     */
     image?: (number | null) | Media;
   };
   contact?: {
+    /**
+     * Untick to hide the section on the website. Its content is kept.
+     */
     enabled?: boolean | null;
+    /**
+     * Small label above the heading. Leave empty for none.
+     */
     eyebrow?: string | null;
     /**
      * Up to 2 lines. Press Enter to start a new line.

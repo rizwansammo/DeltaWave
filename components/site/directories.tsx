@@ -1,11 +1,19 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Search } from "lucide-react";
-import { solutions, projects } from "@/lib/content";
-import { staticPhoto } from "@/lib/images";
-import { ProjectEntry } from "./project-entry";
+import { projectTypes, solutionGroups } from "@/cms/options";
+import { ProjectEntry, type ProjectSummary } from "./project-entry";
 
-export function SolutionsDirectory() {
+export type DirectorySolution = {
+  slug: string;
+  title: string;
+  intro: string;
+  group: string;
+  modules: string[];
+};
+
+/** Published industry solutions in directory order, with search and group filters. */
+export function SolutionsDirectory({ solutions }: { solutions: DirectorySolution[] }) {
   const [query, setQuery] = useState(""),
     [group, setGroup] = useState("All industries");
   const found = useMemo(
@@ -18,18 +26,13 @@ export function SolutionsDirectory() {
             .toLowerCase()
             .includes(query.toLowerCase()),
       ),
-    [query, group],
+    [solutions, query, group],
   );
   return (
     <div className="solution-directory">
       <div className="directory-controls">
         <div className="filter-buttons" aria-label="Filter industries">
-          {[
-            "All industries",
-            "Commerce & operations",
-            "People & organizations",
-            "Services & communities",
-          ].map((g) => (
+          {["All industries", ...solutionGroups].map((g) => (
             <button
               key={g}
               className={group === g ? "selected" : ""}
@@ -91,10 +94,19 @@ export function SolutionsDirectory() {
     </div>
   );
 }
-export function ProjectList({ compact = false }: { compact?: boolean }) {
+
+export type DirectoryProject = ProjectSummary & { type: string };
+
+/** Published portfolio entries with the type filters and honest empty states. */
+export function ProjectList({
+  projects,
+  compact = false,
+}: {
+  projects: DirectoryProject[];
+  compact?: boolean;
+}) {
   const [filter, setFilter] = useState("All work");
-  const list =
-    filter === "All work" || filter === "Product concepts" ? projects : [];
+  const list = filter === "All work" ? projects : projects.filter((p) => p.type === filter);
   return (
     <>
       {!compact && (
@@ -102,14 +114,7 @@ export function ProjectList({ compact = false }: { compact?: boolean }) {
           className="portfolio-filters filter-buttons"
           aria-label="Filter portfolio"
         >
-          {[
-            "All work",
-            "Real projects",
-            "Case studies",
-            "Software demonstrations",
-            "Product concepts",
-            "Under development",
-          ].map((f) => (
+          {["All work", ...projectTypes].map((f) => (
             <button
               key={f}
               aria-pressed={filter === f}
@@ -123,19 +128,7 @@ export function ProjectList({ compact = false }: { compact?: boolean }) {
       )}
       <div className="project-list">
         {list.map((p, i) => (
-          <ProjectEntry
-            key={p.slug}
-            index={i}
-            project={{
-              slug: p.slug,
-              name: p.name,
-              title: p.title,
-              status: p.status,
-              intro: p.intro,
-              photo: staticPhoto(p.image),
-              linkLabel: "Explore the concept",
-            }}
-          />
+          <ProjectEntry key={p.slug} index={i} project={p} />
         ))}
       </div>
       {!list.length && (

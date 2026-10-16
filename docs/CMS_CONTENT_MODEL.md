@@ -2,7 +2,7 @@
 
 Payload 3 is the only content engine. The schema lives in `cms/` and is registered in `payload.config.ts`. Generated types are in `payload-types.ts` (`pnpm generate:types`).
 
-Phase 1 delivered the model, access rules and publishing workflow. Since Phase 2A **the homepage renders from the Homepage global**, the published service categories and the solutions and portfolio entries it features (see `docs/ARCHITECTURE.md`, "Homepage content"). The other pages still read `lib/content.ts` until their own Phase 2 step.
+Phase 1 delivered the model, access rules and publishing workflow. Since Phase 2A **the homepage renders from the Homepage global**. Since Phase 2B the **/services, /solutions and /portfolio pages, all their detail pages and the header menus render from the published service categories, services, solutions and portfolio entries** (see `docs/ARCHITECTURE.md`). About, Academy, Contact and Privacy still read code until Phase 2C/2D.
 
 ## Principles
 
@@ -18,9 +18,9 @@ All website collections share `cms/versioned.ts`: drafts on, up to 50 versions p
 | Collection | Slug | Purpose | Key fields |
 | --- | --- | --- | --- |
 | Pages | `pages` | Standalone editorial pages such as the privacy notice | `title`, `hero.eyebrow`, `hero.heading` (line breaks kept), `hero.description`, `body` (rich text: paragraphs, H2/H3, bold, italic, links, lists, quotes) |
-| Service categories | `service-categories` | The four capability groups | `title`, `number` (two digits, sort order), `short`, `description`, `image`, `overview` (the service page that introduces the category), `services` (ordered) |
+| Service categories | `service-categories` | The four capability groups | `title`, `number` (two digits, sort order), `short`, `description`, `image` (Services page and the category's service pages), `overview` (the service page that introduces the category; category links lead to it), `services` (ordered; the menu shows the first four), `menuSolutions` (up to 3 solutions listed in the Services menu for a category without services; its Services page entry lists the first six solutions instead) |
 | Services | `services` | `/services/*` detail pages | `title`, `short`, `category` (required), `intro`, `problem`, `audience`, `deliverables[]` (1 to 10), `approach`, `technology`, `relatedSolutions` (up to 6) |
-| Industry solutions | `solutions` | `/solutions/*` detail pages | `title`, `label`, `group` (Commerce & operations, People & organizations, Services & communities), `intro`, `challenge`, `modules[]` (1 to 8), `workflow[]` (**exactly 4**, the layout's four columns), `consideration`, `supportingServices` (up to 4) |
+| Industry solutions | `solutions` | `/solutions/*` detail pages | `title`, `label`, `group` (Commerce & operations, People & organizations, Services & communities), `intro`, `challenge`, `modules[]` (1 to 8), `workflow[]` (**exactly 4**, the layout's four columns), `consideration`, `supportingServices` (up to 4), `order` (directory and menu position; entries are numbered in this order) |
 | Portfolio | `portfolio-projects` | `/portfolio/*` entries | `name`, `title`, `type` (the five public filters), `projectStatus` (Planned concept, In development, Live, Completed), `clientPermission` (required for Real projects and Case studies), `image`, `intro`, `challenge`, `features[]`, `direction`, `relatedSolution` |
 | Media library | `media` | Images | Upload (JPEG, PNG, WebP, AVIF, 10 MB), required `alt`, `caption`, `credit` (source and licence). Generated sizes: thumbnail 400×300, small 640, medium 1100 and large 1800 (WebP). Large is never enlarged: a narrower photo gets a full-size WebP there. Focal point enabled. |
 | Accounts | `users` | People who sign in | `email`, `name`, `roles` (Administrator, Editor). Lockout after 5 failures for 15 minutes, 8-hour sessions, 12-character minimum password. |
@@ -67,6 +67,14 @@ How the published homepage is rendered:
 - **The homepage cannot be unpublished.** Once published it always has a live version; the admin explains this if **Unpublish** is used. Hide sections instead, or publish a new version.
 - **Before the first publication** (or while the database is unreachable) visitors see the approved prototype content. `pnpm seed:homepage` publishes that same content into the CMS, after which it is fully editable.
 
+### How services, solutions and the portfolio are rendered (Phase 2B)
+
+- **Published records only.** Unpublished or deleted records have no page (404) and disappear from the directories, the menus, related lists and the sitemap. There is no fallback to code.
+- **Services:** a category's overview page shows "Our capability" and lists its services. Every other service page sits under its category in the breadcrumbs. The contact buttons preselect the category when its title is one of the contact form's options.
+- **Solutions:** the directory follows **Directory order**, numbered 01, 02…, with the group filters and search working on title, introduction and modules. The Solutions menu groups them the same way.
+- **Portfolio:** the type filters and honest empty states are unchanged. The "planned product concept" wording, such as "No commercial release" and "Representative industry photography", appears only for entries of type Product concepts with status Planned concept. It is never applied to real projects.
+- **Search & sharing:** `seo.title` and `seo.description` replace the page title and introduction in metadata, `seo.image` becomes the sharing image, and `seo.noIndex` adds `noindex` and leaves the page out of the sitemap.
+
 ## Access matrix
 
 | Operation | Visitor | Editor | Administrator |
@@ -107,7 +115,7 @@ Planned for Phase 2: preview of drafts on the real page design, live preview, sc
 
 | Prototype source | CMS destination |
 | --- | --- |
-| `lib/content.ts` `categories` | `service-categories` (`links` → `services`; the matching service slug → `overview`; `image` → Media) |
+| `lib/content.ts` `categories` | `service-categories` (`links` → `services`; the matching service slug → `overview`; `image` → Media; the Services menu's three solutions → `menuSolutions`). Done in 2B by `pnpm seed:content` |
 | `lib/content.ts` `services` | `services` (`related` → `relatedSolutions`) |
 | `lib/content.ts` `solutions` | `solutions` (`services` → `supportingServices`) |
 | `lib/content.ts` `projects` | `portfolio-projects` (`status` → `projectStatus`, `solution` → `relatedSolution`, `type` "Product concepts") |

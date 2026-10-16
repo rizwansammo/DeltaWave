@@ -1,49 +1,19 @@
-import { createElement as h } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { mkdir, writeFile } from "node:fs/promises";
-import { HomePage } from "../components/site/pages.tsx";
-import { approvedHomepageView } from "../lib/cms/homepage-view.ts";
-import { Navigation } from "../components/site/navigation.tsx";
-import { Footer } from "../components/site/shared.tsx";
-import Page, { generateMetadata } from "../app/(frontend)/[...slug]/page.tsx";
-import NotFound from "../app/(frontend)/not-found.tsx";
+import Page from "../app/(frontend)/[...slug]/page.tsx";
 import { allPaths } from "../lib/content.ts";
+import { renderSite } from "./render-site.mjs";
+
 await mkdir(".qa/rendered", { recursive: true });
-const meta = [];
-for (const route of allPaths) {
-  const slug = route.slice(1).split("/");
-  const node =
-    route === "/"
-      ? h(HomePage, { content: approvedHomepageView() })
-      : await Page({ params: Promise.resolve({ slug }) });
-  const page = renderToStaticMarkup(
-    h(
-      "html",
-      { lang: "en" },
-      h(
-        "body",
-        null,
-        h(Navigation),
-        h("main", { id: "main-content" }, node),
-        h(Footer),
-      ),
-    ),
-  );
-  await writeFile(
-    ".qa/rendered/" + (route === "/" ? "home" : slug.join("__")) + ".html",
-    page,
-  );
-  if (route !== "/")
-    meta.push({
-      path: route,
-      ...(await generateMetadata({ params: Promise.resolve({ slug }) })),
-    });
-}
+const pages = await renderSite();
+for (const page of pages) await writeFile(`.qa/rendered/${page.name}.html`, page.html);
 await writeFile(
-  ".qa/rendered/not-found.html",
-  renderToStaticMarkup(h(NotFound)),
+  ".qa/metadata.json",
+  JSON.stringify(
+    pages.filter((p) => p.meta).map((p) => ({ path: p.path, ...p.meta })),
+    null,
+    2,
+  ),
 );
-await writeFile(".qa/metadata.json", JSON.stringify(meta, null, 2));
 await writeFile(".qa/routes.json", JSON.stringify(allPaths, null, 2));
 try {
   await Page({ params: Promise.resolve({ slug: ["does-not-exist"] }) });

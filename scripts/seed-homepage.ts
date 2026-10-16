@@ -13,20 +13,16 @@
 //
 // It runs through `payload run` with the Local API as trusted server code. Run
 // it after `pnpm migrate` in production, with NODE_ENV=production.
-import { copyFile, stat } from "node:fs/promises";
-import path from "node:path";
 import { getPayload } from "payload";
-import sharp from "sharp";
 import config from "../payload.config";
 import { approvedHomepage as a } from "../lib/cms/homepage-approved";
 import { categories, projects, solutions } from "../lib/content";
-import { images } from "../lib/images";
-import type { Media, PortfolioProject, Solution } from "../payload-types";
+import type { PortfolioProject, Solution } from "../payload-types";
+import { printResults, seedPhoto, type SeedResult } from "./seed-media";
 
 const payload = await getPayload({ config });
 const trusted = { overrideAccess: true } as const;
-const imagesDir = path.resolve("public/images");
-const results: [string, string, "created" | "kept"][] = [];
+const results: SeedResult[] = [];
 
 const homepage = await payload.findGlobal({ slug: "homepage", depth: 0, draft: false, ...trusted });
 const { totalDocs: versions } = await payload.countGlobalVersions({ global: "homepage", ...trusted });
@@ -36,8 +32,7 @@ if (versions > 0 || homepage?.updatedAt) {
   );
 } else {
   await seed();
-  console.log("Seeded the approved homepage:");
-  for (const [kind, name, outcome] of results) console.log(`  ${outcome.padEnd(8)}${kind}: ${name}`);
+  printResults("Seeded the approved homepage:", results);
 }
 
 async function seed() {
@@ -53,7 +48,7 @@ async function seed() {
     ...featuredProjects.map((p) => p.image),
   ]);
   const photo: Record<string, number> = {};
-  for (const key of photoKeys) photo[key] = await seedPhoto(key);
+  for (const key of photoKeys) photo[key] = await seedPhoto(payload, key, results);
 
   for (const c of categories) {
     await findOrCreate("service-categories", c.slug, c.title, () =>
@@ -178,80 +173,4 @@ async function findOrCreate(
   const doc = await create();
   results.push([collection, name, "created"]);
   return doc.id;
-}
-
-/**
- * An approved photograph, uploaded once from its full-size WebP master in
- * public/images (the JPEG beside it is a smaller fallback for old browsers).
- */
-async function seedPhoto(key: string) {
-  const p = images[key];
-  if (!p) throw new Error(`Unknown approved image "${key}" (see lib/images.ts).`);
-  const filename = `${p.file}.webp`;
-  const { docs } = await payload.find({
-    collection: "media",
-    where: { filename: { equals: filename } },
-    limit: 1,
-    depth: 0,
-    pagination: false,
-    ...trusted,
-  });
-  if (docs[0]) {
-    results.push(["media", filename, "kept"]);
-    return docs[0].id;
-  }
-  // No record owns this name, so a file left on disk by an earlier database
-  // is an orphan; overwriting it keeps the name stable for the lookup above.
-  const doc = await payload.create({
-    collection: "media",
-    data: { alt: p.alt, credit: p.credit },
-    filePath: path.join(imagesDir, filename),
-    overwriteExistingFiles: true,
-    ...trusted,
-  });
-  const installed = await installApprovedWebp(doc, p.file);
-  results.push(["media", `${filename}${installed.length ? ` (approved WebP: ${installed.join(", ")})` : ""}`, "created"]);
-  return doc.id;
-}
-
-/**
- * Payload re-encodes WebP uploads (it treats WebP as possibly animated) and
- * encodes its own WebP sizes, both slightly differently from the prototype.
- * Where the stored original or a generated size has exactly the dimensions of
- * one of the approved WebP files, that file is installed in its place, so the
- * seeded homepage serves the approved images byte for byte.
- */
-async function installApprovedWebp(doc: Media, file: string) {
-  const mediaDir = path.resolve(payload.collections.media.config.upload.staticDir ?? "media");
-  const approved = new Map<string, string>();
-  for (const name of [`${file}-640.webp`, `${file}-1100.webp`, `${file}.webp`]) {
-    const source = path.join(imagesDir, name);
-    const { width, height } = await sharp(source).metadata();
-    approved.set(`${width}x${height}`, source);
-  }
-  const install = async (stored: { filename?: string | null; width?: number | null; height?: number | null; mimeType?: string | null } | undefined) => {
-    if (!stored?.filename || stored.mimeType !== "image/webp") return null;
-    const source = approved.get(`${stored.width}x${stored.height}`);
-    if (!source) return null;
-    await copyFile(source, path.join(mediaDir, stored.filename));
-    return (await stat(source)).size;
-  };
-
-  const installed: string[] = [];
-  const data: { filesize?: number; sizes?: Partial<Record<"small" | "medium" | "large", { filesize: number }>> } = {};
-  const original = await install(doc);
-  if (original !== null) {
-    data.filesize = original;
-    installed.push("original");
-  }
-  for (const size of ["small", "medium", "large"] as const) {
-    const filesize = await install(doc.sizes?.[size]);
-    if (filesize === null) continue;
-    data.sizes = { ...data.sizes, [size]: { filesize } };
-    installed.push(size);
-  }
-  if (installed.length > 0) {
-    await payload.update({ collection: "media", id: doc.id, data, ...trusted });
-  }
-  return installed;
 }

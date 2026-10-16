@@ -29,20 +29,46 @@ export const ServiceCategories: CollectionConfig = {
     },
     { name: "short", label: "Short statement", type: "text", required: true, maxLength: 90 },
     { name: "description", type: "textarea", required: true, maxLength: 300 },
-    { name: "image", type: "upload", relationTo: "media" },
+    {
+      name: "image",
+      type: "upload",
+      relationTo: "media",
+      admin: {
+        description:
+          "Shown on the Services page and at the top of this category's service pages.",
+      },
+    },
     {
       name: "overview",
       label: "Overview page",
       type: "relationship",
       relationTo: "services",
-      admin: { description: "The service page that introduces this category." },
+      admin: {
+        description:
+          "The service page that introduces this category. Category links lead to it.",
+      },
     },
     {
       name: "services",
       type: "relationship",
       relationTo: "services",
       hasMany: true,
-      admin: { description: "Services listed under this category, in display order." },
+      admin: {
+        description:
+          "Services listed under this category, in display order. The menu shows the first four.",
+      },
+    },
+    {
+      name: "menuSolutions",
+      label: "Solutions in the menu",
+      type: "relationship",
+      relationTo: "solutions",
+      hasMany: true,
+      maxRows: 3,
+      admin: {
+        description:
+          "For a category without services: industry solutions listed under it in the Services menu. Its Services page entry lists the first six solutions instead.",
+      },
     },
     slugField(),
     seoField,

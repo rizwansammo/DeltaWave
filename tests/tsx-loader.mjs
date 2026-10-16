@@ -9,6 +9,9 @@ export async function resolve(specifier, context, next) {
       url: new URL("./navigation-stub.mjs", import.meta.url).href,
       shortCircuit: true,
     };
+  // Unit tests never connect to Payload; modules that do are only imported.
+  if (specifier === "@payload-config")
+    return { url: "data:text/javascript,export default {}", shortCircuit: true };
   // Stylesheets are bundled by Next.js; markup rendering does not need them.
   if (/\.s?css$/.test(specifier))
     return { url: "data:text/javascript,export {}", shortCircuit: true };

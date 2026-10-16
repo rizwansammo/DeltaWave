@@ -4,9 +4,15 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, ArrowUpRight, Menu, X } from "lucide-react";
 import { Brand } from "./brand";
 import { nav } from "@/lib/site";
-import { categories, services, solutions } from "@/lib/content";
+import { solutionGroups } from "@/cms/options";
+import type { NavigationMenu } from "@/lib/cms/catalog-view";
 
-export function Navigation() {
+/**
+ * The site header. Menu content comes from the published CMS records; while
+ * it is unavailable (menu is null) the header keeps its plain links only.
+ */
+export function Navigation({ menu }: { menu: NavigationMenu | null }) {
+  const hasMenu = (n: string) => menu !== null && (n === "Services" || n === "Solutions");
   const path = usePathname();
   const [open, setOpen] = useState<string | null>(null),
     [mobile, setMobile] = useState(false),
@@ -80,7 +86,7 @@ export function Navigation() {
         <Brand />
         <nav className="desktop-nav" aria-label="Main navigation">
           {nav.map(([n, p]) => {
-            const has = n === "Services" || n === "Solutions",
+            const has = hasMenu(n),
               active = p === "/" ? path === "/" : path.startsWith(p);
             return (
               <div
@@ -140,7 +146,7 @@ export function Navigation() {
           {mobile ? <X /> : <Menu />}
         </button>
       </div>
-      {["Services", "Solutions"].map((name) => (
+      {menu && ["Services", "Solutions"].map((name) => (
         <div
           key={name}
           id={"mega-" + name}
@@ -165,44 +171,39 @@ export function Navigation() {
                   </a>
                 </div>
                 <div className="mega-services">
-                  {categories.map((cat) => (
+                  {menu.categories.map((cat) => (
                     <div key={cat.slug} className="mega-group">
                       <a
                         className="mega-heading"
-                        href={"/services/" + cat.slug}
+                        href={cat.href ?? "/services"}
                       >
                         {cat.title}
                         <ArrowUpRight size={14} />
                       </a>
                       <p>{cat.short}</p>
-                      {cat.links.slice(0, 4).map((slug) => (
+                      {cat.services.slice(0, 4).map((s) => (
                         <a
                           className="mega-sub"
-                          key={slug}
-                          href={"/services/" + slug}
+                          key={s.slug}
+                          href={"/services/" + s.slug}
                         >
-                          {services.find((x) => x.slug === slug)?.title}
+                          {s.title}
                         </a>
                       ))}
-                      {cat.links.length > 4 && (
-                        <a className="mega-sub" href={"/services/" + cat.slug}>
+                      {cat.services.length > 4 && (
+                        <a className="mega-sub" href={cat.href ?? "/services"}>
                           Explore this capability <ArrowUpRight size={12} />
                         </a>
                       )}
-                      {cat.slug === "business-industry-solutions" &&
-                        [
-                          "education-coaching",
-                          "ecommerce-facebook",
-                          "retail-pos-restaurant",
-                        ].map((slug) => (
-                          <a
-                            className="mega-sub"
-                            key={slug}
-                            href={"/solutions/" + slug}
-                          >
-                            {solutions.find((x) => x.slug === slug)?.title}
-                          </a>
-                        ))}
+                      {cat.menuSolutions.map((s) => (
+                        <a
+                          className="mega-sub"
+                          key={s.slug}
+                          href={"/solutions/" + s.slug}
+                        >
+                          {s.title}
+                        </a>
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -224,14 +225,10 @@ export function Navigation() {
                   </a>
                 </div>
                 <div className="mega-solutions">
-                  {[
-                    "Commerce & operations",
-                    "People & organizations",
-                    "Services & communities",
-                  ].map((g) => (
+                  {solutionGroups.map((g) => (
                     <div className="mega-group" key={g}>
                       <h3>{g}</h3>
-                      {solutions
+                      {menu.solutions
                         .filter((s) => s.group === g)
                         .map((s) => (
                           <a
@@ -263,7 +260,7 @@ export function Navigation() {
               <a href={p} aria-current={path === p ? "page" : undefined}>
                 {n}
               </a>
-              {(n === "Services" || n === "Solutions") && (
+              {hasMenu(n) && (
                 <button
                   aria-label={`Expand ${n.toLowerCase()}`}
                   aria-expanded={expanded === n}
@@ -277,29 +274,29 @@ export function Navigation() {
                 </button>
               )}
             </div>
-            {(n === "Services" || n === "Solutions") && (
+            {menu && hasMenu(n) && (
               <div
                 className="mobile-submenu"
                 id={"mobile-" + n}
                 hidden={expanded !== n}
               >
                 {n === "Services"
-                  ? categories.map((c) => (
+                  ? menu.categories.map((c) => (
                       <div key={c.slug}>
                         <a
                           className="mobile-category"
-                          href={"/services/" + c.slug}
+                          href={c.href ?? "/services"}
                         >
                           {c.title}
                         </a>
-                        {c.links.map((s) => (
-                          <a href={"/services/" + s} key={s}>
-                            {services.find((x) => x.slug === s)?.title}
+                        {c.services.map((s) => (
+                          <a href={"/services/" + s.slug} key={s.slug}>
+                            {s.title}
                           </a>
                         ))}
                       </div>
                     ))
-                  : solutions.map((s) => (
+                  : menu.solutions.map((s) => (
                       <a href={"/solutions/" + s.slug} key={s.slug}>
                         {s.title}
                       </a>

@@ -27,5 +27,5 @@ const media = path.resolve(testMediaDir);
 if (!media.startsWith(path.resolve(".qa") + path.sep)) throw new Error(`Unexpected test media directory: ${media}`);
 await rm(media, { recursive: true, force: true });
 
-console.log("Seeding the approved homepage...");
-run(["seed:homepage"]);
+console.log("Seeding the approved content...");
+run(["seed"]);

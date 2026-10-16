@@ -1,22 +1,20 @@
 import { notFound } from "next/navigation";
-import { services, solutions, projects, allPaths } from "@/lib/content";
 import { metadataFor } from "@/lib/metadata";
+import { getCatalog } from "@/lib/cms/catalog";
+import { catalogDetailSeo, isCatalogPath, renderCatalogRoute } from "@/components/site/catalog";
 import {
   AboutPage,
-  ServicesPage,
-  SolutionsPage,
-  PortfolioPage,
   AcademyPage,
   ContactPage,
   PrivacyPage,
-  ServicePage,
-  SolutionPage,
-  ProjectPage,
 } from "@/components/site/pages";
-const main: Record<
-  string,
-  { component: React.ComponentType; title: string; description: string }
-> = {
+
+// Rendered on demand (see the frontend layout): /services, /solutions,
+// /portfolio and their detail pages come from the published CMS records, so
+// a record published in /admin is reachable at once. Unknown, unpublished
+// and deleted records are real 404s.
+
+const main: Record<string, { title: string; description: string; component?: React.ComponentType }> = {
   about: {
     component: AboutPage,
     title: "About us",
@@ -24,19 +22,16 @@ const main: Record<
       "Meet DeltaWave Technology, a developing technology enterprise focused on thoughtful engineering and practical business systems.",
   },
   services: {
-    component: ServicesPage,
     title: "Our services",
     description:
       "Explore software engineering, industry applications, cloud and managed IT, branding, UI/UX and digital growth services.",
   },
   solutions: {
-    component: SolutionsPage,
     title: "Custom industry solutions",
     description:
       "Explore tailored applications for commerce, education, healthcare, logistics, finance and other business operations.",
   },
   portfolio: {
-    component: PortfolioPage,
     title: "Portfolio & product direction",
     description:
       "Explore the planned coaching management and commerce product concepts from DeltaWave Technology, with clear development status.",
@@ -60,56 +55,29 @@ const main: Record<
       "How DeltaWave Technology uses contact details and project information when you make an enquiry.",
   },
 };
-export function generateStaticParams() {
-  return allPaths
-    .filter((p) => p !== "/")
-    .map((p) => ({ slug: p.slice(1).split("/") }));
-}
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string[] }>;
-}) {
+
+const notFoundMetadata = { title: "Page not found", robots: { index: false, follow: false } };
+
+type Props = { params: Promise<{ slug: string[] }> };
+
+export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const path = "/" + slug.join("/");
-  if (slug.length === 1 && main[slug[0]]) {
-    const p = main[slug[0]];
-    return metadataFor(path, p.title, p.description);
+  if (slug.length === 1 && main[slug[0]]) return metadataFor(path, main[slug[0]].title, main[slug[0]].description);
+  if (slug.length === 2 && isCatalogPath(slug)) {
+    const seo = catalogDetailSeo(slug, await getCatalog());
+    if (seo) return metadataFor(path, seo.title, seo.description, { image: seo.image, noIndex: seo.noIndex });
   }
-  const d =
-    slug.length === 2
-      ? slug[0] === "services"
-        ? services.find((s) => s.slug === slug[1])
-        : slug[0] === "solutions"
-          ? solutions.find((s) => s.slug === slug[1])
-          : slug[0] === "portfolio"
-            ? projects.find((s) => s.slug === slug[1])
-            : undefined
-      : undefined;
-  if (d) return metadataFor(path, d.title, d.intro);
-  return { title: "Page not found", robots: { index: false, follow: false } };
+  return notFoundMetadata;
 }
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ slug: string[] }>;
-}) {
+
+export default async function Page({ params }: Props) {
   const { slug } = await params;
-  if (slug.length === 1 && main[slug[0]]) {
-    const Component = main[slug[0]].component;
-    return <Component />;
-  }
-  if (slug.length === 2) {
-    if (slug[0] === "services") {
-      const s = services.find((x) => x.slug === slug[1]);
-      if (s) return <ServicePage service={s} />;
-    }
-    if (slug[0] === "solutions") {
-      const s = solutions.find((x) => x.slug === slug[1]);
-      if (s) return <SolutionPage solution={s} />;
-    }
-    if (slug[0] === "portfolio" && projects.some((p) => p.slug === slug[1]))
-      return <ProjectPage slug={slug[1]} />;
+  const Component = slug.length === 1 ? main[slug[0]]?.component : undefined;
+  if (Component) return <Component />;
+  if (isCatalogPath(slug)) {
+    const page = renderCatalogRoute(slug, await getCatalog());
+    if (page) return page;
   }
   notFound();
 }

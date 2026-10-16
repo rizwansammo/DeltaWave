@@ -3,7 +3,14 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Navigation } from "@/components/site/navigation";
 import { Footer } from "@/components/site/shared";
+import { getNavigationMenu } from "@/lib/cms/catalog";
 import { site } from "@/lib/site";
+
+// Every public page is rendered on request: the header menus, /services,
+// /solutions, /portfolio and the homepage read published CMS content, so a
+// publish in /admin appears on the next page load without a rebuild.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
@@ -30,7 +37,7 @@ export const metadata: Metadata = {
   },
   robots: { index: site.indexable, follow: site.indexable },
 };
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -72,7 +79,7 @@ export default function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <Navigation />
+        <Navigation menu={await getNavigationMenu()} />
         <main id="main-content">{children}</main>
         <Footer />
         <script

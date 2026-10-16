@@ -53,10 +53,15 @@ test("robots.txt blocks everything until indexing is approved, then the CMS", as
 });
 
 test("admin branding comes from the shared components", () => {
-  const { graphics, beforeNavLinks, views } = config.admin.components;
+  const { graphics, beforeNavLinks, afterNavLinks, views } = config.admin.components;
   assert.equal(graphics.Logo, "/components/cms/admin-logo#AdminLogo");
   assert.equal(graphics.Icon, "/components/cms/admin-icon#AdminIcon");
-  assert.deepEqual(beforeNavLinks, ["/components/cms/nav-brand#NavBrand"]);
+  // The navy sidebar refinement (docs/CMS_NAV_REFINEMENT.md).
+  assert.deepEqual(beforeNavLinks, [
+    "/components/cms/nav-brand#NavBrand",
+    "/components/cms/sidebar-overview#SidebarOverview",
+  ]);
+  assert.deepEqual(afterNavLinks, ["/components/cms/sidebar-utilities#SidebarUtilities"]);
   assert.equal(
     views.createFirstUser.Component,
     "/components/cms/create-first-user#BrandedCreateFirstUser",

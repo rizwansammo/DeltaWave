@@ -20,13 +20,13 @@ Stack: Next.js 16.4.1, React 19.2.9, Payload 3.90.2, PostgreSQL 18, TypeScript, 
 pnpm install
 pnpm setup:env      # creates .env with a random database password and Payload secret
 pnpm db:up          # starts deltawave-postgres on 127.0.0.1:54330
-pnpm seed:homepage  # loads the approved homepage into the CMS (safe to repeat)
+pnpm seed           # loads the approved content into the CMS (safe to repeat)
 pnpm dev            # http://localhost:3000
 ```
 
 Then open `http://localhost:3000/admin`. On an empty database Payload asks for the first account, which always becomes an Administrator. Use `localhost` rather than `127.0.0.1`: cookie sign-in only works from the origin in `NEXT_PUBLIC_SITE_URL`.
 
-The homepage is edited under **Website settings → Homepage**. Until it has been published (by the seed or an administrator) the site shows the approved prototype content and logs a warning.
+The homepage, service categories, services, industry solutions and portfolio are edited under **Website content** in the admin. Published changes appear on the next page load. Until the homepage has been published (by the seed or an administrator) the site shows the approved prototype homepage and logs a warning; the services, solutions and portfolio pages show only published records.
 
 In development Payload keeps the database schema in sync automatically (push mode). Do not run `pnpm migrate` against the development database.
 
@@ -39,6 +39,8 @@ In development Payload keeps the database schema in sync automatically (push mod
 | `pnpm typecheck` | TypeScript |
 | `pnpm lint` | ESLint (the 14 warnings are a documented decision about plain links) |
 | `pnpm test` | Unit tests: enquiry, content, brand, access control, routing, homepage content |
+| `pnpm seed` | `seed:content`, then `seed:homepage`: the approved content for an empty CMS. In production, run it once after `pnpm migrate` with `NODE_ENV=production` |
+| `pnpm seed:content` | Import the approved service categories, services, industry solutions and portfolio entries with their relationships, in one transaction. Reuses existing records, never changes records people have edited (it lists them for review), and changes nothing once services exist |
 | `pnpm seed:homepage` | Publish the approved homepage, its photographs and featured records into the CMS. Changes nothing once the Homepage has been saved. In production, run it once after `pnpm migrate` with `NODE_ENV=production` |
 | `pnpm test:render` then `pnpm test:html` | Server-render every page and inspect the HTML (needs Python 3) |
 | `pnpm build` then `pnpm test:e2e` | Browser and API tests against the production build and a disposable `deltawave_test` database, recreated and seeded each run (test uploads go to `.qa/test-media`) |
@@ -86,5 +88,6 @@ Screenshots are written to `.qa/screenshots`; comparison images for failures go 
 - `docs/CMS_CONTENT_MODEL.md`: collections, globals, roles and workflow
 - `docs/PHASE1_REPORT.md`: what was done and verified in Phase 1
 - `docs/PHASE2A_REPORT.md`: the CMS-driven homepage (Phase 2A)
+- `docs/PHASE2B_REPORT.md`: CMS-driven services, solutions, portfolio and menus (Phase 2B)
 - `docs/PHASE2_PLAN.md`: the rest of Phase 2
 - `docs/IMAGE_CREDITS.md`: photography and font licences

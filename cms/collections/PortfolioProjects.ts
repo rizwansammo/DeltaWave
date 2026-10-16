@@ -1,24 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { auditFields, seoField, slugField } from "../fields";
+import { projectStatuses, projectTypes } from "../options";
 import { contentAccess, contentHooks, contentVersions } from "../versioned";
-
-// Matches the portfolio filters on the public site.
-export const projectTypes = [
-  "Real projects",
-  "Case studies",
-  "Software demonstrations",
-  "Product concepts",
-  "Under development",
-];
-
-// Honest delivery states. Nothing may be described as live or completed
-// unless it actually is.
-export const projectStatuses = [
-  "Planned concept",
-  "In development",
-  "Live",
-  "Completed",
-];
 
 const needsClientPermission = ["Real projects", "Case studies"];
 
@@ -50,7 +33,7 @@ export const PortfolioProjects: CollectionConfig = {
       required: true,
       maxLength: 120,
     },
-    { name: "type", type: "select", required: true, options: projectTypes },
+    { name: "type", type: "select", required: true, options: [...projectTypes] },
     {
       // Not "status": that name would share a database enum with the drafts
       // `_status` column.
@@ -58,7 +41,7 @@ export const PortfolioProjects: CollectionConfig = {
       label: "Project status",
       type: "select",
       required: true,
-      options: projectStatuses,
+      options: [...projectStatuses],
     },
     {
       name: "clientPermission",

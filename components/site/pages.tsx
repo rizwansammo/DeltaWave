@@ -1,14 +1,13 @@
 import { ArrowUpRight, ArrowDown, ArrowRight, Check } from "lucide-react";
-import {
-  categories,
-  services,
-  solutions,
-  projects,
-  type Service,
-  type Solution,
-} from "@/lib/content";
-import { serviceOptions, site } from "@/lib/site";
+import { site } from "@/lib/site";
 import type { HomepageView, LinkView } from "@/lib/cms/homepage-view";
+import {
+  isPlannedConcept,
+  type Catalog,
+  type ProjectView,
+  type ServiceView,
+  type SolutionView,
+} from "@/lib/cms/catalog-view";
 import {
   ButtonLink,
   TextLink,
@@ -384,7 +383,7 @@ export function AboutPage() {
   );
 }
 
-export function ServicesPage() {
+export function ServicesPage({ catalog }: { catalog: Catalog }) {
   return (
     <>
       <PageHero
@@ -395,7 +394,7 @@ export function ServicesPage() {
         <ButtonLink href="/contact">Discuss your requirements</ButtonLink>
       </PageHero>
       <section className="container services-directory">
-        {categories.map((c) => (
+        {catalog.categories.map((c) => (
           <article key={c.slug} className="service-category">
             <div className="category-identifier">
               <span>{c.number}</span>
@@ -403,32 +402,34 @@ export function ServicesPage() {
             </div>
             <div className="category-content">
               <h2>
-                <a href={"/services/" + c.slug}>
-                  {c.title}
-                  <ArrowUpRight size={26} />
-                </a>
+                {c.href ? (
+                  <a href={c.href}>
+                    {c.title}
+                    <ArrowUpRight size={26} />
+                  </a>
+                ) : (
+                  c.title
+                )}
               </h2>
               <p className="lead">{c.description}</p>
               <div className="category-links">
-                {c.links.length
-                  ? c.links.map((slug) => (
-                      <a href={"/services/" + slug} key={slug}>
-                        {services.find((s) => s.slug === slug)?.title}
+                {c.services.length
+                  ? c.services.map((s) => (
+                      <a href={"/services/" + s.slug} key={s.slug}>
+                        {s.title}
                         <ArrowUpRight size={15} />
                       </a>
                     ))
-                  : solutions.slice(0, 6).map((s) => (
+                  : catalog.solutions.slice(0, 6).map((s) => (
                       <a href={"/solutions/" + s.slug} key={s.slug}>
                         {s.title}
                         <ArrowUpRight size={15} />
                       </a>
                     ))}
               </div>
-              <TextLink href={"/services/" + c.slug}>
-                Explore this capability
-              </TextLink>
+              {c.href && <TextLink href={c.href}>Explore this capability</TextLink>}
             </div>
-            <Photo name={c.image} />
+            {c.photo && <ResponsivePhoto photo={c.photo} />}
           </article>
         ))}
       </section>
@@ -440,37 +441,31 @@ export function ServicesPage() {
   );
 }
 
-export function ServicePage({ service: s }: { service: Service }) {
-  const c = categories.find((x) => x.slug === s.category)!;
-  const category = s.slug === s.category;
+export function ServicePage({ service: s }: { service: ServiceView }) {
+  const c = s.category;
+  const category = s.isOverview && c !== null;
+  const option = c?.contactOption ?? undefined;
   return (
     <>
       <div className="container">
         <Breadcrumbs
           items={[
             { label: "Services", href: "/services" },
-            ...(!category
-              ? [{ label: c.title, href: "/services/" + c.slug }]
-              : []),
+            ...(!category && c ? [{ label: c.title, href: c.href ?? undefined }] : []),
             { label: category ? c.title : s.title },
           ]}
         />
       </div>
       <section className="container detail-hero">
         <div>
-          <Eyebrow>{category ? "Our capability" : c.title}</Eyebrow>
+          <Eyebrow>{category ? "Our capability" : (c?.title ?? "Our services")}</Eyebrow>
           <h1>{s.title}</h1>
           <p className="lead">{s.intro}</p>
-          <ButtonLink
-            href={
-              "/contact?service=" +
-              encodeURIComponent(serviceOptions[categories.indexOf(c)])
-            }
-          >
+          <ButtonLink href={option ? "/contact?service=" + encodeURIComponent(option) : "/contact"}>
             Discuss this service
           </ButtonLink>
         </div>
-        <Photo name={c.image} priority />
+        {c?.photo && <ResponsivePhoto photo={c.photo} priority />}
       </section>
       <section className="container service-body">
         <aside>
@@ -506,50 +501,46 @@ export function ServicePage({ service: s }: { service: Service }) {
           </div>
         </div>
       </section>
-      {category && c.links.length > 0 && (
+      {category && c.services.length > 0 && (
         <section className="container category-more">
           <SectionHead
             label="Explore the capability"
             title="Find the right starting point."
           />
           <div className="related-list">
-            {c.links.map((slug) => {
-              const item = services.find((x) => x.slug === slug)!;
-              return (
-                <a key={slug} href={"/services/" + slug}>
-                  <h3>{item.title}</h3>
-                  <p>{item.short}</p>
-                  <ArrowUpRight size={20} />
-                </a>
-              );
-            })}
+            {c.services.map((item) => (
+              <a key={item.slug} href={"/services/" + item.slug}>
+                <h3>{item.title}</h3>
+                <p>{item.short}</p>
+                <ArrowUpRight size={20} />
+              </a>
+            ))}
           </div>
         </section>
       )}
-      <section className="container related-section">
-        <SectionHead
-          label="Where it can make a difference"
-          title="Connected to real business needs."
-        />
-        <div className="related-list">
-          {s.related.map((slug) => {
-            const sol = solutions.find((x) => x.slug === slug)!;
-            return (
-              <a href={"/solutions/" + slug} key={slug}>
+      {s.relatedSolutions.length > 0 && (
+        <section className="container related-section">
+          <SectionHead
+            label="Where it can make a difference"
+            title="Connected to real business needs."
+          />
+          <div className="related-list">
+            {s.relatedSolutions.map((sol) => (
+              <a href={"/solutions/" + sol.slug} key={sol.slug}>
                 <h3>{sol.title}</h3>
                 <p>{sol.intro}</p>
                 <ArrowUpRight size={20} />
               </a>
-            );
-          })}
-        </div>
-      </section>
-      <ProjectCTA service={serviceOptions[categories.indexOf(c)]} />
+            ))}
+          </div>
+        </section>
+      )}
+      <ProjectCTA service={option} />
     </>
   );
 }
 
-export function SolutionsPage() {
+export function SolutionsPage({ solutions }: { solutions: SolutionView[] }) {
   return (
     <>
       <PageHero
@@ -568,7 +559,15 @@ export function SolutionsPage() {
         </TextLink>
       </section>
       <section className="container directory-section">
-        <SolutionsDirectory />
+        <SolutionsDirectory
+          solutions={solutions.map(({ slug, title, intro, group, modules }) => ({
+            slug,
+            title,
+            intro,
+            group,
+            modules,
+          }))}
+        />
       </section>
       <ProjectCTA
         title="Your industry is only the starting point."
@@ -579,7 +578,7 @@ export function SolutionsPage() {
   );
 }
 
-export function SolutionPage({ solution: s }: { solution: Solution }) {
+export function SolutionPage({ solution: s }: { solution: SolutionView }) {
   return (
     <>
       <div className="container">
@@ -632,7 +631,7 @@ export function SolutionPage({ solution: s }: { solution: Solution }) {
               <li key={w}>
                 <span>0{i + 1}</span>
                 <h3>{w}</h3>
-                {i < 3 && <ArrowRight size={20} aria-hidden="true" />}
+                {i < s.workflow.length - 1 && <ArrowRight size={20} aria-hidden="true" />}
               </li>
             ))}
           </ol>
@@ -658,18 +657,17 @@ export function SolutionPage({ solution: s }: { solution: Solution }) {
           label="Supporting capabilities"
           title="The engineering behind the solution."
         />
-        <div className="related-list">
-          {s.services.map((slug) => {
-            const service = services.find((x) => x.slug === slug)!;
-            return (
-              <a href={"/services/" + slug} key={slug}>
+        {s.supportingServices.length > 0 && (
+          <div className="related-list">
+            {s.supportingServices.map((service) => (
+              <a href={"/services/" + service.slug} key={service.slug}>
                 <h3>{service.title}</h3>
                 <p>{service.short}</p>
                 <ArrowUpRight size={20} />
               </a>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
         <TextLink href="/solutions">Explore other industries</TextLink>
       </section>
       <ProjectCTA service="Business & industry solutions" />
@@ -677,7 +675,9 @@ export function SolutionPage({ solution: s }: { solution: Solution }) {
   );
 }
 
-export function PortfolioPage() {
+export function PortfolioPage({ projects }: { projects: ProjectView[] }) {
+  // The note describes concepts, so it is shown only while every entry is one.
+  const onlyConcepts = projects.length > 0 && projects.every(isPlannedConcept);
   return (
     <>
       <PageHero
@@ -686,21 +686,35 @@ export function PortfolioPage() {
         description="A transparent view of the work we are exploring. We will add approved projects, demonstrations and case studies as they become ready to share."
       />
       <section className="container portfolio-directory">
-        <div className="portfolio-note">
-          <span className="status-label">Early product direction</span>
-          <p>
-            The entries below are planned product concepts. Development, launch
-            dates and commercial availability have not been confirmed.
-          </p>
-        </div>
-        <ProjectList />
+        {onlyConcepts && (
+          <div className="portfolio-note">
+            <span className="status-label">Early product direction</span>
+            <p>
+              The entries below are planned product concepts. Development, launch
+              dates and commercial availability have not been confirmed.
+            </p>
+          </div>
+        )}
+        <ProjectList
+          projects={projects.map((p) => ({
+            slug: p.slug,
+            name: p.name,
+            title: p.title,
+            type: p.type,
+            status: p.status,
+            intro: p.intro,
+            photo: p.photo,
+            linkLabel: p.linkLabel,
+          }))}
+        />
       </section>
       <ProjectCTA title="Have a problem worth exploring?" />
     </>
   );
 }
-export function ProjectPage({ slug }: { slug: string }) {
-  const p = projects.find((x) => x.slug === slug)!;
+export function ProjectPage({ project: p }: { project: ProjectView }) {
+  // The concept wording describes planned product concepts only.
+  const concept = isPlannedConcept(p);
   return (
     <>
       <div className="container">
@@ -716,17 +730,27 @@ export function ProjectPage({ slug }: { slug: string }) {
         <h1>{p.name}</h1>
         <p className="lead">{p.intro}</p>
         <div className="project-status">
-          <span>Product concept</span>
-          <span>No commercial release</span>
-          <span>Discovery to be planned</span>
+          {concept ? (
+            <>
+              <span>Product concept</span>
+              <span>No commercial release</span>
+              <span>Discovery to be planned</span>
+            </>
+          ) : (
+            <span>{p.type}</span>
+          )}
         </div>
       </section>
-      <div className="container project-wide-image">
-        <Photo name={p.image} priority />
-        <p className="photo-note">
-          Representative industry photography. This is not a product screenshot.
-        </p>
-      </div>
+      {p.photo && (
+        <div className="container project-wide-image">
+          <ResponsivePhoto photo={p.photo} priority />
+          {p.type === "Product concepts" && (
+            <p className="photo-note">
+              Representative industry photography. This is not a product screenshot.
+            </p>
+          )}
+        </div>
+      )}
       <section className="container editorial-split">
         <Eyebrow>The opportunity</Eyebrow>
         <div>
@@ -738,19 +762,27 @@ export function ProjectPage({ slug }: { slug: string }) {
               <li key={f}>{f}</li>
             ))}
           </ul>
-          <h3>What would come next</h3>
-          <p>{p.direction}</p>
-          <div className="technical-note">
-            <span className="small-label">Current status</span>
-            <p>
-              This is a product direction, not a completed project or live
-              product. Technology choices, screenshots, customer use and
-              measurable outcomes are not yet available.
-            </p>
-          </div>
-          <TextLink href={"/solutions/" + p.solution}>
-            Explore the related industry solution
-          </TextLink>
+          {p.direction && (
+            <>
+              <h3>What would come next</h3>
+              <p>{p.direction}</p>
+            </>
+          )}
+          {concept && (
+            <div className="technical-note">
+              <span className="small-label">Current status</span>
+              <p>
+                This is a product direction, not a completed project or live
+                product. Technology choices, screenshots, customer use and
+                measurable outcomes are not yet available.
+              </p>
+            </div>
+          )}
+          {p.relatedSolution && (
+            <TextLink href={"/solutions/" + p.relatedSolution.slug}>
+              Explore the related industry solution
+            </TextLink>
+          )}
         </div>
       </section>
       <ProjectCTA
