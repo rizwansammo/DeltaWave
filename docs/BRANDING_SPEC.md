@@ -14,7 +14,16 @@ The authoritative brand implementation is the approved prototype, **`DeltaWave-U
 | CMS sign-in and first account | `components/cms/admin-logo.tsx` | Payload `graphics.Logo`; also placed above the create-first-user form by `components/cms/create-first-user.tsx`. |
 | CMS navigation | `components/cms/nav-brand.tsx` | Full lockup at canonical size at the top of the sidebar. |
 | CMS header | `components/cms/admin-icon.tsx` | The icon alone, uniformly scaled to the 18 px header slot. |
-| Favicons and touch icon | `app/(frontend)/layout.tsx`, `payload.config.ts` (`admin.meta.icons`) | Optical 16, 32 (`/favicon.png`) and 48 px PNGs, 256 px touch icon. |
+| Favicons and touch icon | `app/(frontend)/layout.tsx`, `payload.config.ts` (`admin.meta.icons`) | White optical 16, 32 (`/favicon.png`) and 48 px PNGs for dark browser chrome; original blue 256 px Apple touch icon. |
+
+**White favicon variant.** In addition to the unchanged original blue optical assets,
+`public/brand/deltawave_corporate_white_optical_{16,32,48}px.png` are
+colour-only variants, with precisely the same pixel dimensions and alpha
+channels as the corresponding blue originals. Only RGB was set to white;
+the outline, antialiasing and transparent area are unchanged. The white
+32 px copy is also `public/favicon.png`. These variants are explicitly
+approved for browser-tab visibility. The navy lockup artwork, 256 px Apple
+touch icon and organization identity assets remain original.
 
 **Stylesheet delivery.** The public site imports the three shared files from the top of `app/(frontend)/globals.css`, so it ships one stylesheet, as the prototype did. The admin pulls the same files into its theme with Sass `@use` in `app/(payload)/custom.scss`. Do not import these files from components: with the lockup CSS in its own stylesheet, Chromium was seen to re-shape the scaled wordmark narrower (about 8% at the 0.9 scale) after a full-page capture. Tests guard the one-sheet arrangement.
 

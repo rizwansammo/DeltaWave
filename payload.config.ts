@@ -61,14 +61,14 @@ export default buildConfig({
           rel: "icon",
           type: "image/png",
           sizes: "16x16",
-          url: "/brand/deltawave_corporate_blue_optical_16px.png",
+          url: "/brand/deltawave_corporate_white_optical_16px.png",
         },
-        { rel: "icon", type: "image/png", sizes: "32x32", url: "/favicon.png" },
+        { rel: "icon", type: "image/png", sizes: "32x32", url: "/favicon.png?v=white-1" },
         {
           rel: "icon",
           type: "image/png",
           sizes: "48x48",
-          url: "/brand/deltawave_corporate_blue_optical_48px.png",
+          url: "/brand/deltawave_corporate_white_optical_48px.png",
         },
         {
           rel: "apple-touch-icon",

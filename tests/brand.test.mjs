@@ -133,9 +133,26 @@ test("brand assets are byte-identical to the owner's originals", async (t) => {
   }
 });
 
-test("favicon is the original 32px optical icon", async () => {
+test("white optical favicons preserve the original icon transparency", async () => {
+  const sharp = (await import("sharp")).default;
+  for (const size of [16, 32, 48]) {
+    const source = `public/brand/deltawave_corporate_blue_optical_${size}px.png`;
+    const variant = `public/brand/deltawave_corporate_white_optical_${size}px.png`;
+    const originalAlpha = await sharp(source).extractChannel("alpha").raw().toBuffer();
+    const whiteAlpha = await sharp(variant).extractChannel("alpha").raw().toBuffer();
+    assert.deepEqual(whiteAlpha, originalAlpha, `${size}px silhouette changed`);
+    const { data, info } = await sharp(variant).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    assert.equal(info.channels, 4);
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] !== 0) {
+        assert.equal(data[i], 255);
+        assert.equal(data[i + 1], 255);
+        assert.equal(data[i + 2], 255);
+      }
+    }
+  }
   assert.equal(
     await sha256("public/favicon.png"),
-    await sha256("public/brand/deltawave_corporate_blue_optical_32px.png"),
+    await sha256("public/brand/deltawave_corporate_white_optical_32px.png"),
   );
 });
