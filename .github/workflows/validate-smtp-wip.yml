@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - fix/cms-managed-smtp-wip
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
