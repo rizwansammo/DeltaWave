@@ -71,9 +71,19 @@ Administrators configure outgoing email entirely in **Site settings → Email & 
 
 **The encryption key.** It was generated once on the server (`openssl rand -hex 32`) and is stored root-only in `/opt/DeltaWave/.env.app` and `/opt/DeltaWave/keys/credentials-encryption.key`. It is deliberately not part of the nightly backups. For disaster recovery, copy it once into DeltaWave's password manager: `cat /opt/DeltaWave/keys/credentials-encryption.key`. Restoring a database backup on a new server with the same key keeps the SMTP password working; with a new key, re-enter the password in the CMS. Do not change the key casually: a new key makes the stored password unreadable until it is entered again.
 
-## SMTP patch verification (before the live rollout)
+## SMTP patch verification and production rollout (2026-10-18)
 
-The isolated SMTP branch check passed on GitHub Actions: TypeScript, lint, unit tests and production build passed; **72 browser/CMS API tests passed, 7 prototype-parity tests skipped, 0 failed**. New tests cover encrypted/password-masked storage, administrator-only access, protection against private SMTP endpoints, and preventing credential reuse when changing SMTP host or username. This verifies the branch, **not yet production SMTP delivery**; an administrator still needs to configure and test the real mailbox after deployment.
+The isolated SMTP branch check passed on GitHub Actions: TypeScript, lint, unit tests and production build passed; **72 browser/CMS API tests passed, 7 prototype-parity tests skipped, 0 failed**. New tests cover encrypted/password-masked storage, administrator-only access, protection against private SMTP endpoints, and preventing credential reuse when changing SMTP host or username. This verifies the code and interface; **real SMTP delivery still needs the owner to enter the mailbox credentials in the live CMS and run the connection/email test**.
+
+**Production deployment completed (2026-10-18, 05:58 UTC):**
+
+- Main commit: `0fea20fbcc3ca1b756e7db4f7d0264706fd04dff`; new immutable GHCR image: `ghcr.io/rizwansammo/deltawave@sha256:864e581c9ed7f9dbcf2bf0aeda71c4866568085c5690a96722a87e4c35338a60`.
+- Previous image (retained for rollback): `ghcr.io/rizwansammo/deltawave@sha256:39def5e4d08850f26603ffce28cdaa283a1849ce6159a23d49744cc7a74a74b4`. The previous `.env` image selection was also preserved at `/opt/DeltaWave/preflight/env-before-cms-smtp-20261018`.
+- Database and media were backed up before migration (`db-20261018T055326Z.dump`, `media-20261018T055326Z.tgz`). Migration `20261016_215553_phase3_cms_smtp` was the sole outstanding migration and completed successfully. Only the DeltaWave app container was recreated; the DeltaWave database and all other applications were left running.
+- Post-deployment backups: `db-20261018T055759Z.dump` and `media-20261018T055759Z.tgz`. The isolated restore check reported **RESTORE MATCHES LIVE** for users, services, solutions, media, pages, migrations and enquiries.
+- The new DeltaWave app and database were both healthy; the home page, admin login and contact page returned HTTP 200. Unauthenticated requests to the SMTP settings endpoint and encrypted storage global returned HTTP 403. The live app could load its existing credential-encryption key; no replacement key was generated. All 61 other running containers remained running.
+- Online enquiries remain disabled: Turnstile has not yet been configured (`/api/enquiry` returns `{"enabled":false}`). SMTP credentials and real outbound email have **not** been tested; the owner must configure and test them through the CMS. Search indexing, R2 and off-server backup are separate outstanding owner decisions.
+- This deployment made no modifications to MateMail, Nginx, other services or shared container configuration.
 
 ## Operations
 
